@@ -15,6 +15,25 @@ function initLanguageSwitcher() {
       else if (lang === 'en') setLanguage('en');
     });
   });
+
+  // Mobile Menu Logic
+  const mobileBtn = document.querySelector('.mobile-menu-btn');
+  const nav = document.querySelector('#main-nav');
+  
+  if (mobileBtn) {
+    mobileBtn.addEventListener('click', () => {
+      nav.classList.toggle('active');
+      mobileBtn.textContent = nav.classList.contains('active') ? '✕' : '☰';
+    });
+  }
+
+  // Close mobile menu when nav link clicked
+  document.querySelectorAll('#main-nav a').forEach(link => {
+    link.addEventListener('click', () => {
+      nav.classList.remove('active');
+      if (mobileBtn) mobileBtn.textContent = '☰';
+    });
+  });
 }
 
 function setLanguage(lang) {
@@ -67,7 +86,10 @@ function handleRoute() {
     renderNewsDetail(id);
   } else if (hash === '#qna') renderQnA();
   else if (hash === '#qna/write') renderWriteQnA();
-  else if (hash === '#products') renderProducts();
+  else if (hash.startsWith('#qna/view/')) {
+    const id = parseInt(hash.split('/')[2]);
+    renderQnADetail(id);
+  } else if (hash === '#products') renderProducts();
   else renderHome();
 }
 
@@ -213,9 +235,9 @@ function renderQnA() {
         </thead>
         <tbody>
           ${qnaData.map(item => `
-            <tr>
+            <tr onclick="handleQnASelection(${item.id})" style="cursor: pointer;">
               <td>${item.id}</td>
-              <td>${item.isSecret ? '<span class="icon-lock"></span> ' + t.secretPost : item.title[currentLang]}</td>
+              <td>${item.isSecret ? '<span class="icon-lock">🔒</span> ' + t.secretPost : item.title[currentLang]}</td>
               <td>${item.author}</td>
               <td>${item.date}</td>
               <td style="color: var(--primary-color); font-weight: 600;">${item.status[currentLang]}</td>
@@ -224,6 +246,42 @@ function renderQnA() {
         </tbody>
       </table>
     </section>
+  `;
+}
+
+function handleQnASelection(id) {
+  const item = qnaData.find(q => q.id === id);
+  if (item.isSecret) {
+    const pwd = prompt(currentLang === 'ko' ? "비밀번호를 입력하세요." : "Please enter the password.");
+    if (pwd) {
+      location.hash = `#qna/view/${id}`;
+    } else {
+      alert(currentLang === 'ko' ? "비밀번호가 틀렸거나 입력되지 않았습니다." : "Incorrect password.");
+    }
+  } else {
+    location.hash = `#qna/view/${id}`;
+  }
+}
+
+function renderQnADetail(id) {
+  const item = qnaData.find(q => q.id === id);
+  const main = document.querySelector('main');
+  const t = translations[currentLang];
+
+  main.innerHTML = `
+    <div class="container" style="max-width: 800px;">
+      <h1 class="section-title">${item.isSecret ? '🔒 ' : ''}${item.title[currentLang]}</h1>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+        <span><strong>${t.author}</strong>: ${item.author}</span>
+        <span><strong>${t.date}</strong>: ${item.date}</span>
+      </div>
+      <div style="min-height: 200px; line-height: 1.8; font-size: 1.1rem; white-space: pre-wrap; margin-bottom: 50px;">
+        ${item.content ? item.content[currentLang] : (currentLang === 'ko' ? '문의 내용입니다.' : 'This is the inquiry content.')}
+      </div>
+      <div style="text-align: center;">
+        <button class="btn btn-primary" onclick="location.hash='#qna'">${t.list}</button>
+      </div>
+    </div>
   `;
 }
 
@@ -238,7 +296,17 @@ function renderWriteQnA() {
         <div class="form-group"><label class="form-label">${t.email}</label><input type="email" id="qna-email" class="form-control" required></div>
         <div class="form-group"><label class="form-label">${t.title}</label><input type="text" id="qna-title" class="form-control" required></div>
         <div class="form-group"><label class="form-label">${t.content}</label><textarea id="qna-content" class="form-control" style="height: 200px;" required></textarea></div>
-        <div class="form-group"><label class="form-label">${t.password}</label><input type="password" id="qna-pwd" class="form-control"></div>
+        
+        <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin: 20px 0;">
+          <input type="checkbox" id="qna-is-secret" style="width: 20px; height: 20px; cursor: pointer;">
+          <label for="qna-is-secret" style="cursor: pointer; font-weight: 600;">${currentLang === 'ko' ? '비밀글로 설정' : 'Set as Secret Post'}</label>
+        </div>
+
+        <div id="pwd-field" class="form-group" style="display: none;">
+          <label class="form-label">${t.password}</label>
+          <input type="password" id="qna-pwd" class="form-control" placeholder="${currentLang === 'ko' ? '비밀번호 입력' : 'Enter password'}">
+        </div>
+
         <div style="display: flex; gap: 10px; margin-top: 30px;">
           <button type="submit" class="btn btn-primary" style="flex: 1;">${t.submit}</button>
           <button type="button" class="btn btn-outline" onclick="location.hash='#qna'" style="flex: 1;">${t.cancel}</button>
@@ -247,12 +315,20 @@ function renderWriteQnA() {
     </div>
   `;
 
+  // 비밀글 체크박스 토글 로직
+  const secretCheckbox = document.getElementById('qna-is-secret');
+  const pwdField = document.getElementById('pwd-field');
+  secretCheckbox.addEventListener('change', (e) => {
+    pwdField.style.display = e.target.checked ? 'block' : 'none';
+  });
+
   document.getElementById('qna-form').addEventListener('submit', handleQnASubmit);
 }
 
 async function handleQnASubmit(e) {
   e.preventDefault();
   const t = translations[currentLang];
+  const isSecret = document.getElementById('qna-is-secret').checked;
   
   const newData = {
     id: qnaData.length + 1,
@@ -260,7 +336,7 @@ async function handleQnASubmit(e) {
     author: document.getElementById('qna-name').value,
     date: new Date().toISOString().split('T')[0],
     status: { ko: "답변대기", en: "Pending" },
-    isSecret: document.getElementById('qna-pwd').value !== ""
+    isSecret: isSecret
   };
 
   // 1. 로컬 데이터에 추가 (즉시 반영)
@@ -274,6 +350,7 @@ async function handleQnASubmit(e) {
         ...newData,
         email: document.getElementById('qna-email').value,
         content: document.getElementById('qna-content').value,
+        password: document.getElementById('qna-pwd').value,
         createdAt: new Date()
       });
     }
