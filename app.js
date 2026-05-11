@@ -233,12 +233,12 @@ function renderWriteQnA() {
   main.innerHTML = `
     <div class="container" style="max-width: 600px;">
       <h1 class="section-title">${t.write}</h1>
-      <form onsubmit="event.preventDefault(); alert('Sent!'); location.hash='#qna';">
-        <div class="form-group"><label class="form-label">${t.name}</label><input type="text" class="form-control" required></div>
-        <div class="form-group"><label class="form-label">${t.email}</label><input type="email" class="form-control" required></div>
-        <div class="form-group"><label class="form-label">${t.title}</label><input type="text" class="form-control" required></div>
-        <div class="form-group"><label class="form-label">${t.content}</label><textarea class="form-control" style="height: 200px;" required></textarea></div>
-        <div class="form-group"><label class="form-label">${t.password}</label><input type="password" class="form-control"></div>
+      <form id="qna-form">
+        <div class="form-group"><label class="form-label">${t.name}</label><input type="text" id="qna-name" class="form-control" required></div>
+        <div class="form-group"><label class="form-label">${t.email}</label><input type="email" id="qna-email" class="form-control" required></div>
+        <div class="form-group"><label class="form-label">${t.title}</label><input type="text" id="qna-title" class="form-control" required></div>
+        <div class="form-group"><label class="form-label">${t.content}</label><textarea id="qna-content" class="form-control" style="height: 200px;" required></textarea></div>
+        <div class="form-group"><label class="form-label">${t.password}</label><input type="password" id="qna-pwd" class="form-control"></div>
         <div style="display: flex; gap: 10px; margin-top: 30px;">
           <button type="submit" class="btn btn-primary" style="flex: 1;">${t.submit}</button>
           <button type="button" class="btn btn-outline" onclick="location.hash='#qna'" style="flex: 1;">${t.cancel}</button>
@@ -246,6 +246,43 @@ function renderWriteQnA() {
       </form>
     </div>
   `;
+
+  document.getElementById('qna-form').addEventListener('submit', handleQnASubmit);
+}
+
+async function handleQnASubmit(e) {
+  e.preventDefault();
+  const t = translations[currentLang];
+  
+  const newData = {
+    id: qnaData.length + 1,
+    title: { ko: document.getElementById('qna-title').value, en: document.getElementById('qna-title').value },
+    author: document.getElementById('qna-name').value,
+    date: new Date().toISOString().split('T')[0],
+    status: { ko: "답변대기", en: "Pending" },
+    isSecret: document.getElementById('qna-pwd').value !== ""
+  };
+
+  // 1. 로컬 데이터에 추가 (즉시 반영)
+  qnaData.unshift(newData);
+
+  // 2. Firebase Firestore에 저장 (서버 반영)
+  try {
+    if (window.db && window.firebaseDB) {
+      const { collection, addDoc } = window.firebaseDB;
+      await addDoc(collection(window.db, "qna"), {
+        ...newData,
+        email: document.getElementById('qna-email').value,
+        content: document.getElementById('qna-content').value,
+        createdAt: new Date()
+      });
+    }
+  } catch (err) {
+    console.error("Firebase save failed:", err);
+  }
+
+  alert(currentLang === 'ko' ? "문의가 정상적으로 등록되었습니다." : "Your inquiry has been submitted.");
+  location.hash = '#qna';
 }
 
 function renderProducts() {
