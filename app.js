@@ -213,9 +213,32 @@ function renderNewsDetail(id) {
   `;
 }
 
-function renderQnA() {
+async function renderQnA() {
   const main = document.querySelector('main');
   const t = translations[currentLang];
+
+  // 1. Firebase에서 최신 데이터 불러오기
+  let displayData = [...qnaData];
+  try {
+    if (window.db && window.firebaseDB) {
+      const { collection, getDocs, query, orderBy } = window.firebaseDB;
+      const q = query(collection(window.db, "qna"), orderBy("createdAt", "desc"));
+      const querySnapshot = await getDocs(q);
+      const firebasePosts = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      // Firebase 데이터가 있으면 기존 정적 데이터와 합침 (중복 방지는 id 등으로 체크 가능)
+      // 여기서는 Firebase 데이터를 우선적으로 표시
+      if (firebasePosts.length > 0) {
+        displayData = [...firebasePosts];
+      }
+    }
+  } catch (err) {
+    console.error("Failed to sync with Firebase:", err);
+  }
+
   main.innerHTML = `
     <section class="container">
       <h1 class="section-title">${t.qnaTitle}</h1>
@@ -234,9 +257,9 @@ function renderQnA() {
           </tr>
         </thead>
         <tbody>
-          ${qnaData.map(item => `
-            <tr onclick="handleQnASelection(${item.id})" style="cursor: pointer;">
-              <td>${item.id}</td>
+          ${displayData.map(item => `
+            <tr onclick="handleQnASelection('${item.id}')" style="cursor: pointer;">
+              <td>${item.id.toString().substring(0, 4)}</td>
               <td>${item.isSecret ? '<span class="icon-lock">🔒</span> ' + t.secretPost : item.title[currentLang]}</td>
               <td>${item.author}</td>
               <td>${item.date}</td>
@@ -247,10 +270,15 @@ function renderQnA() {
       </table>
     </section>
   `;
+
+  // 전역 데이터 업데이트 (상세 보기를 위해)
+  window.currentQnaList = displayData;
 }
 
 function handleQnASelection(id) {
-  const item = qnaData.find(q => q.id === id);
+  const item = (window.currentQnaList || qnaData).find(q => q.id == id);
+  if (!item) return;
+
   if (item.isSecret) {
     const pwd = prompt(currentLang === 'ko' ? "비밀번호를 입력하세요." : "Please enter the password.");
     if (pwd) {
@@ -264,9 +292,10 @@ function handleQnASelection(id) {
 }
 
 function renderQnADetail(id) {
-  const item = qnaData.find(q => q.id === id);
+  const item = (window.currentQnaList || qnaData).find(q => q.id == id);
   const main = document.querySelector('main');
   const t = translations[currentLang];
+  if (!item) return;
 
   main.innerHTML = `
     <div class="container" style="max-width: 800px;">
@@ -276,7 +305,7 @@ function renderQnADetail(id) {
         <span><strong>${t.date}</strong>: ${item.date}</span>
       </div>
       <div style="min-height: 200px; line-height: 1.8; font-size: 1.1rem; white-space: pre-wrap; margin-bottom: 50px;">
-        ${item.content ? item.content[currentLang] : (currentLang === 'ko' ? '문의 내용입니다.' : 'This is the inquiry content.')}
+        ${item.content ? (typeof item.content === 'object' ? item.content[currentLang] : item.content) : (currentLang === 'ko' ? '문의 내용입니다.' : 'This is the inquiry content.')}
       </div>
       <div style="text-align: center;">
         <button class="btn btn-primary" onclick="location.hash='#qna'">${t.list}</button>

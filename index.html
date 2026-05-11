@@ -74,7 +74,7 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA6K0L3dwqfdx0gVRgkPABvgmNh84u8V_E",
@@ -87,8 +87,8 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        window.db = db; // 전역에서 접근 가능하도록 설정
-        window.firebaseDB = { collection, addDoc }; // 필요한 함수 전달
+        window.db = db; 
+        window.firebaseDB = { collection, addDoc, getDocs, query, orderBy }; 
     </script>
 
     <script src="data.js"></script>
