@@ -613,11 +613,12 @@ async function handleEditQnASubmit(e, id) {
   const removeFlag = document.getElementById('remove-attachment-flag')?.value === 'true';
 
   // Spam/Profanity Filter
-  const bannedWords = ['씨발', '병신', '개새끼', '좆까', '광고'];
-  const foundWord = bannedWords.find(word => newTitle.toLowerCase().includes(word) || newContent.toLowerCase().includes(word));
+  const bannedWords = ['씨발', '병신', '개새끼', '좆까', '광고', '바보', '멍청이', '지랄'];
+  const fullText = (newTitle + newContent).toLowerCase();
+  const foundWord = bannedWords.find(word => fullText.includes(word.toLowerCase()));
   if (foundWord) {
-    alert(currentLang === 'ko'
-      ? `부적절한 단어('${foundWord}')가 포함되어 있습니다. 내용을 수정해주세요.`
+    alert(currentLang === 'ko' 
+      ? `부적절한 단어('${foundWord}')가 포함되어 있습니다. 내용을 수정해주세요.` 
       : `Inappropriate word ('${foundWord}') detected. Please check your content.`);
     return;
   }
@@ -646,25 +647,27 @@ async function handleEditQnASubmit(e, id) {
   }
 
   try {
-    if (window.db && window.firebaseDB) {
+    if (window.db && window.firebaseDB && isNaN(id)) {
       const { doc, updateDoc } = window.firebaseDB;
       const dataToUpdate = {
         title: { ko: newTitle, en: newTitle },
         content: newContent,
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        attachment: finalAttachment
       };
       await updateDoc(doc(window.db, "qna", id.toString()), dataToUpdate);
     }
 
     // 로컬 데이터 업데이트
-    const item = qnaData.find(q => q.id == id);
-    if (item) {
-      item.title = { ko: newTitle, en: newTitle };
-      item.content = newContent;
+    const localItem = qnaData.find(q => q.id == id);
+    if (localItem) {
+      localItem.title = { ko: newTitle, en: newTitle };
+      localItem.content = newContent;
+      localItem.attachment = finalAttachment;
     }
 
     alert(currentLang === 'ko' ? "수정되었습니다." : "Updated successfully.");
-    location.hash = '#qna';
+    location.hash = `#qna/view/${id}`;
   } catch (err) {
     console.error("Update failed:", err);
     alert(currentLang === 'ko' ? "수정 중 오류가 발생했습니다." : "Update failed.");
@@ -717,8 +720,9 @@ async function handleQnASubmit(e) {
   const content = document.getElementById('qna-content').value;
 
   // Spam/Profanity Filter
-  const bannedWords = ['욕설', '나쁜말', '바보', '스팸', '광고'];
-  const foundWord = bannedWords.find(word => title.includes(word) || content.includes(word));
+  const bannedWords = ['씨발', '병신', '개새끼', '좆까', '광고', '바보', '멍청이', '지랄'];
+  const fullText = (title + content).toLowerCase();
+  const foundWord = bannedWords.find(word => fullText.includes(word.toLowerCase()));
   if (foundWord) {
     alert(currentLang === 'ko'
       ? `부적절한 단어('${foundWord}')가 포함되어 있습니다. 바른 말을 사용해주세요.`
