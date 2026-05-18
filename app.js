@@ -76,11 +76,22 @@ function setLanguage(lang) {
   currentLang = lang;
   // Update header/nav UI
   const t = translations[lang];
-  const navLinks = document.querySelectorAll('nav ul li a');
-  navLinks[0].textContent = t.home;
-  navLinks[1].textContent = t.products;
-  navLinks[2].textContent = t.news;
-  navLinks[3].textContent = t.support;
+  
+  // Ensure Logo is preserved (fix for previous selector collision)
+  const logoLink = document.querySelector('.logo');
+  if (logoLink) {
+    logoLink.innerHTML = `<img src="logo_rg.png" alt="RG ROBOTICS Logo" class="logo-img"> RG ROBOTICS`;
+  }
+  
+  document.querySelector('#main-nav a[href="#home"]').textContent = t.home;
+  document.querySelector('#main-nav a[href="#company"]').textContent = t.company;
+  document.querySelector('#main-nav a[href="#careers"]').textContent = t.careers;
+  document.querySelector('#main-nav a[href="#products"]').textContent = t.products;
+  document.querySelector('#main-nav a[href="#news"]').textContent = t.news;
+  document.querySelector('#main-nav a[href="#support"]').textContent = t.support;
+  document.querySelector('#main-nav a[href="#faq"]').textContent = t.supportFAQ;
+  document.querySelector('#main-nav a[href="#qna"]').textContent = t.supportQnA;
+  document.querySelector('#main-nav a[href="#service"]').textContent = t.supportService;
   
   // Mobile only: Ensure actions are visible if needed or in menu
   // (Optional: add more dynamic logic if requested)
@@ -128,6 +139,16 @@ function handleRoute() {
   else if (hash.startsWith('#qna/view/')) {
     const id = hash.split('/')[2];
     renderQnADetail(id);
+  } else if (hash === '#faq') {
+    renderSupport('faq');
+  } else if (hash === '#service') {
+    renderSupport('service');
+  } else if (hash === '#support') {
+    renderSupport('main');
+  } else if (hash === '#careers') {
+    renderCareers();
+  } else if (hash === '#company') {
+    renderCompany();
   } else if (hash === '#products') renderProducts();
   else renderHome();
 }
@@ -437,7 +458,7 @@ async function handleEditQnASubmit(e, id) {
     }
 
     alert(currentLang === 'ko' ? "수정되었습니다." : "Updated successfully.");
-    location.hash = `#qna/view/${id}`;
+    location.hash = '#qna';
   } catch (err) {
     console.error("Update failed:", err);
     alert(currentLang === 'ko' ? "수정 중 오류가 발생했습니다." : "Update failed.");
@@ -574,6 +595,63 @@ function renderProducts() {
   `;
 }
 
+function renderSupport(sub) {
+  const main = document.querySelector('main');
+  const t = translations[currentLang];
+  
+  let content = '';
+  if (sub === 'faq') {
+    content = `
+      <section class="container">
+        <h1 class="section-title">${t.supportFAQ}</h1>
+        <div style="max-width: 800px; margin: 0 auto;">
+          <div style="background: #fdfdfd; border: 1px solid #eee; border-radius: 12px; padding: 30px; margin-bottom: 20px;">
+            <p style="font-weight: 700; font-size: 1.1rem; margin-bottom: 10px;">Q: ${currentLang === 'ko' ? '제품 구매는 어떻게 하나요?' : 'How can I purchase the products?'}</p>
+            <p style="color: var(--text-muted);">${currentLang === 'ko' ? 'A: 상단의 "문의하기" 또는 고객센터(010-1234-5678)를 통해 상담 받으실 수 있습니다.' : 'A: You can get a consultation through "Contact Us" or our service center (+82 10-1234-5678).'}</p>
+          </div>
+          <div style="background: #fdfdfd; border: 1px solid #eee; border-radius: 12px; padding: 30px; margin-bottom: 20px;">
+            <p style="font-weight: 700; font-size: 1.1rem; margin-bottom: 10px;">Q: ${currentLang === 'ko' ? '배송 기간은 얼마나 걸리나요?' : 'How long does delivery take?'}</p>
+            <p style="color: var(--text-muted);">${currentLang === 'ko' ? 'A: 주문 제작 방식에 따라 통상 2~4주 정도 소요됩니다.' : 'A: It usually takes 2-4 weeks depending on the custom production process.'}</p>
+          </div>
+        </div>
+      </section>
+    `;
+  } else if (sub === 'service') {
+    content = `
+      <section class="container">
+        <h1 class="section-title">${t.supportService}</h1>
+        <div style="text-align: center; max-width: 800px; margin: 0 auto;">
+          <p style="font-size: 1.2rem; margin-bottom: 40px; color: var(--text-muted);">${currentLang === 'ko' ? '전국 5개 거점 센터에서 전문 엔지니어가 신속하게 도와드립니다.' : 'Expert engineers help you quickly at 5 regional centers nationwide.'}</p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div style="padding: 20px; background: #f8f9fa; border-radius: 8px;">
+              <h4 style="margin-bottom: 10px;">${currentLang === 'ko' ? '서울/수도권 센터' : 'Seoul Center'}</h4>
+              <p>010-1234-5678</p>
+            </div>
+            <div style="padding: 20px; background: #f8f9fa; border-radius: 8px;">
+              <h4 style="margin-bottom: 10px;">${currentLang === 'ko' ? '부산/영남 센터' : 'Busan Center'}</h4>
+              <p>051-123-4567</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
+  } else {
+    // support main view as shown in the screenshot
+    content = `
+      <section class="container" style="text-align: center;">
+        <h1 class="section-title">${t.support}</h1>
+        <div style="display: flex; flex-direction: column; gap: 30px; max-width: 400px; margin: 0 auto; text-align: center; align-items: center;">
+          <a href="#faq" style="font-size: 1.8rem; font-weight: 700; color: var(--text-color);">${t.supportFAQ}</a>
+          <a href="#qna" style="font-size: 1.8rem; font-weight: 700; color: var(--text-color);">${t.supportQnA}</a>
+          <a href="#service" style="font-size: 1.8rem; font-weight: 700; color: var(--text-color);">${t.supportService}</a>
+        </div>
+      </section>
+    `;
+  }
+  
+  main.innerHTML = content;
+}
+
 function renderFooter() {
   const footer = document.querySelector('footer');
   const t = translations[currentLang];
@@ -600,10 +678,95 @@ function renderFooter() {
             <ul style="color: #888; line-height: 2;"><li>${t.faq}</li><li>Q&A</li><li>${t.serviceCenter}</li></ul>
         </div>
     </div>
-    <div style="margin-top: 60px; padding-top: 30px; border-top: 1px solid #333; color: #555; font-size: 0.85rem; text-align: center;">
-        &copy; 2026 RG-ROBOTICS. All rights reserved.
+    <div style="margin-top: 60px; padding-top: 30px; border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+        <div style="color: #555; font-size: 0.85rem;">
+            &copy; 2026 RG-ROBOTICS. All rights reserved.
+        </div>
+        <div class="share-buttons" style="display: flex; gap: 15px; align-items: center;">
+            <span style="color: #888; font-size: 0.9rem;">Share:</span>
+            <button onclick="copyToClipboard()" style="background: #333; color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">🔗 Link</button>
+            <button onclick="shareSNS('facebook')" style="background: #3b5998; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">F</button>
+            <button onclick="shareSNS('kakao')" style="background: #FEE500; color: #3c1e1e; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">K</button>
+        </div>
     </div>
   `;
+}
+
+window.copyToClipboard = () => {
+    navigator.clipboard.writeText(window.location.href);
+    alert(currentLang === 'ko' ? "링크가 복사되었습니다!" : "Link copied to clipboard!");
+};
+
+window.shareSNS = (platform) => {
+    const url = encodeURIComponent(window.location.href);
+    let shareUrl = '';
+    if (platform === 'facebook') shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+    if (platform === 'kakao') shareUrl = `https://sharer.kakao.com/talk/friends/picker/link?url=${url}`;
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+};
+
+function renderCompany() {
+    const main = document.querySelector('main');
+    const t = translations[currentLang];
+    main.innerHTML = `
+        <section class="container">
+            <h1 class="section-title">${t.company}</h1>
+            <div style="max-width: 900px; margin: 0 auto;">
+                <div style="margin-bottom: 60px; line-height: 2; font-size: 1.1rem; color: #444;">
+                    <h2 style="font-size: 2rem; color: var(--primary-color); margin-bottom: 25px;">
+                        ${currentLang === 'ko' ? '인간과 기술의 따뜻한 공존, RG ROBOTICS' : 'Warm Coexistence of Human and Technology, RG ROBOTICS'}
+                    </h2>
+                    <p style="margin-bottom: 20px;">
+                        ${currentLang === 'ko' 
+                          ? 'RG ROBOTICS는 웨어러블 로보틱스 기술을 기반으로 인간의 신체적 한계를 극복하고 삶의 질을 향상시키는 것을 목표로 합니다. 의료용 보행 지원 로봇부터 산업 현장의 근력 보조 솔루션까지, 우리는 일상의 모든 움직임에 새로운 가능성을 더합니다.' 
+                          : 'RG ROBOTICS aims to overcome human physical limits and improve quality of life based on wearable robotics technology. From medical gait support robots to strength-assist solutions in industrial sites, we add new possibilities to every movement of daily life.'}
+                    </p>
+                    <p>
+                        ${currentLang === 'ko'
+                          ? '우리의 기술은 단순히 기계를 만드는 것에 그치지 않습니다. 누군가에게는 다시 걷는 기쁨을, 누군가에게는 안전하고 가벼운 노동 환경을 선사하는 "사람을 향한 기술"을 지향합니다.'
+                          : 'Our technology does not stop at just making machines. We aim for "technology for people" that gives the joy of walking again to someone and a safe and light working environment to someone else.'}
+                    </p>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+                    <div style="padding: 40px; background: #f8f9fa; border-radius: 15px; text-align: center;">
+                        <h3 style="margin-bottom: 15px;">Vision</h3>
+                        <p style="color: var(--text-muted);">${currentLang === 'ko' ? '로보틱스로 인류의 활동 범위를 무한히 확장합니다.' : 'Infinitely expanding the scope of human activity with robotics.'}</p>
+                    </div>
+                    <div style="padding: 40px; background: #f8f9fa; border-radius: 15px; text-align: center;">
+                        <h3 style="margin-bottom: 15px;">Mission</h3>
+                        <p style="color: var(--text-muted);">${currentLang === 'ko' ? '모든 사람이 제약 없이 움직이는 세상을 만듭니다.' : 'Creating a world where everyone moves without constraints.'}</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 60px; text-align: center; padding: 40px; border: 1px solid #eee; border-radius: 12px;">
+                    <h3 style="margin-bottom: 20px;">${t.careers}</h3>
+                    <p style="margin-bottom: 25px; color: var(--text-muted);">${currentLang === 'ko' ? 'RG ROBOTICS의 미래를 함께 만들어갈 동료를 찾습니다.' : 'We are looking for colleagues to build the future of RG ROBOTICS together.'}</p>
+                    <a href="#careers" class="btn btn-outline" style="border-color: var(--primary-color); color: var(--primary-color);">${currentLang === 'ko' ? '채용공고 확인하기' : 'View Job Openings'}</a>
+                </div>
+            </div>
+        </section>
+    `;
+}
+
+function renderCareers() {
+    const main = document.querySelector('main');
+    const t = translations[currentLang];
+    main.innerHTML = `
+        <section class="container">
+            <h1 class="section-title">${t.careers}</h1>
+            <div style="max-width: 800px; margin: 0 auto;">
+                <div style="background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 40px; text-align: center;">
+                    <h2 style="margin-bottom: 20px;">RG-ROBOTICS와 함께 세상을 바꿀 동료를 찾습니다.</h2>
+                    <p style="color: var(--text-muted); line-height: 1.8; margin-bottom: 40px;">
+                        우리는 기술로 인간의 한계를 극복하고 더 나은 미래를 만듭니다.<br>
+                        로보틱스, AI, 임베디드 등 다양한 분야의 인재를 상시 채용 중입니다.
+                    </p>
+                    <a href="mailto:careers@rg-robotics.com" class="btn btn-primary">지원하기 (Email)</a>
+                </div>
+            </div>
+        </section>
+    `;
 }
 
 /* Chatbot Logic */
