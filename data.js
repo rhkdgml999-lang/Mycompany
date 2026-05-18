@@ -42,7 +42,8 @@ const translations = {
     faq: "자주 묻는 질문",
     serviceCenter: "서비스 센터",
     edit: "수정",
-    delete: "삭제"
+    delete: "삭제",
+    appDownload: "앱 다운로드"
   },
   en: {
     home: "Home",
@@ -87,7 +88,8 @@ const translations = {
     faq: "FAQ",
     serviceCenter: "Service Center",
     edit: "Edit",
-    delete: "Delete"
+    delete: "Delete",
+    appDownload: "App Download"
   }
 };
 

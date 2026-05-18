@@ -97,6 +97,8 @@ function setLanguage(lang) {
   // (Optional: add more dynamic logic if requested)
 
   document.querySelector('.header-actions .btn-primary').textContent = t.contactUs;
+  const pwaBtn = document.getElementById('pwa-install-btn');
+  if (pwaBtn) pwaBtn.textContent = t.appDownload;
 
   // Update Chatbot UI
   const chatHeader = document.querySelector('.chat-header h3');
@@ -143,6 +145,27 @@ function initRouter() {
       }).catch(err => {
         console.log('Service Worker registration failed: ', err);
       });
+    });
+  }
+
+  // PWA Install Logic
+  let deferredPrompt;
+  const pwaBtn = document.getElementById('pwa-install-btn');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (pwaBtn) pwaBtn.style.display = 'inline-block';
+  });
+
+  if (pwaBtn) {
+    pwaBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`User response to install prompt: ${outcome}`);
+      deferredPrompt = null;
+      pwaBtn.style.display = 'none';
     });
   }
 }
