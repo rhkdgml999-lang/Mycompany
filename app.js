@@ -191,12 +191,15 @@ async function syncQnAData() {
   if (!window.db || !window.firebaseDB) return;
   const { collection, getDocs, query, orderBy } = window.firebaseDB;
   try {
-    const qCount = query(collection(window.db, "qna"), orderBy("createdAt", "desc"));
-    const querySnapshot = await getDocs(qCount);
+    // legacy posts support: use 'date' which is always present
+    const q = query(collection(window.db, "qna"), orderBy("date", "desc"));
+    const querySnapshot = await getDocs(q);
     qnaData = querySnapshot.docs.map(doc => ({
       ...doc.data(),
       id: doc.id
     }));
+    window.currentQnaList = qnaData;
+    console.log("QnA Data synced:", qnaData.length);
   } catch (err) {
     console.error("Sync failed:", err);
   }
@@ -604,73 +607,67 @@ window.removeAttachment = () => {
 
 async function handleEditQnASubmit(e, id) {
   e.preventDefault();
-  const titleInput = document.getElementById('edit-qna-title');
-  const contentInput = document.getElementById('edit-qna-content');
-  const newTitle = titleInput.value;
-  const newContent = contentInput.value;
+  const titleVal = document.getElementById('edit-qna-title').value;
+  const contentVal = document.getElementById('edit-qna-content').value;
   const fileInput = document.getElementById('edit-qna-file');
   const newFile = fileInput.files[0];
   const removeFlag = document.getElementById('remove-attachment-flag')?.value === 'true';
 
   // Spam/Profanity Filter
-  const bannedWords = ['씨발', '병신', '개새끼', '좆까', '광고', '바보', '멍청이', '지랄'];
-  const fullText = (newTitle + newContent).toLowerCase();
+  const bannedWords = ['씨발', '병신', '개새끼', '좆까', '광고', '지랄', '멍청이', '바보'];
+  const fullText = (titleVal + contentVal).toLowerCase();
   const foundWord = bannedWords.find(word => fullText.includes(word.toLowerCase()));
   if (foundWord) {
-    alert(currentLang === 'ko' 
-      ? `부적절한 단어('${foundWord}')가 포함되어 있습니다. 내용을 수정해주세요.` 
-      : `Inappropriate word ('${foundWord}') detected. Please check your content.`);
+    alert(currentLang === 'ko' ? `부적절한 단어('${foundWord}')가 발견되었습니다.` : `Banned word detected.`);
     return;
   }
 
-  const item = qnaData.find(q => q.id == id);
-  if (!item) return;
+  // Find exact item in global data
+  const targetId = id.toString();
+  const item = qnaData.find(q => q.id.toString() === targetId);
+  
+  if (!item) {
+    alert(currentLang === 'ko' ? "게시글을 찾을 수 없습니다." : "Post not found.");
+    return;
+  }
 
-  let finalAttachment = item.attachment;
-
-  if (removeFlag) finalAttachment = null;
+  let updatedAttachment = item.attachment;
+  if (removeFlag) updatedAttachment = null;
 
   if (newFile) {
     if (newFile.size > 2 * 1024 * 1024) {
-      alert(currentLang === 'ko' ? "파일 크기는 2MB 이하여야 합니다." : "File size must be under 2MB.");
+      alert(currentLang === 'ko' ? "파일은 2MB 이하여야 합니다." : "Max 2MB allowed.");
       return;
     }
-    finalAttachment = await new Promise((resolve) => {
+    updatedAttachment = await new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onload = (ev) => resolve({
-        name: newFile.name,
-        type: newFile.type,
-        data: ev.target.result
-      });
+      reader.onload = (ev) => resolve({ name: newFile.name, type: newFile.type, data: ev.target.result });
       reader.readAsDataURL(newFile);
     });
   }
 
   try {
-    if (window.db && window.firebaseDB && isNaN(id)) {
+    if (window.db && window.firebaseDB && isNaN(targetId)) {
       const { doc, updateDoc } = window.firebaseDB;
       const dataToUpdate = {
-        title: { ko: newTitle, en: newTitle },
-        content: newContent,
+        title: { ko: titleVal, en: titleVal },
+        content: contentVal,
         updatedAt: new Date(),
-        attachment: finalAttachment
+        attachment: updatedAttachment
       };
-      await updateDoc(doc(window.db, "qna", id.toString()), dataToUpdate);
+      await updateDoc(doc(window.db, "qna", targetId), dataToUpdate);
     }
 
-    // 로컬 데이터 업데이트
-    const localItem = qnaData.find(q => q.id == id);
-    if (localItem) {
-      localItem.title = { ko: newTitle, en: newTitle };
-      localItem.content = newContent;
-      localItem.attachment = finalAttachment;
-    }
+    // Update local data immediately
+    item.title = { ko: titleVal, en: titleVal };
+    item.content = contentVal;
+    item.attachment = updatedAttachment;
 
     alert(currentLang === 'ko' ? "수정되었습니다." : "Updated successfully.");
-    location.hash = `#qna/view/${id}`;
+    location.hash = `#qna/view/${targetId}`;
   } catch (err) {
     console.error("Update failed:", err);
-    alert(currentLang === 'ko' ? "수정 중 오류가 발생했습니다." : "Update failed.");
+    alert(currentLang === 'ko' ? "수정 저장 중 오류가 발생했습니다." : "Save failed.");
   }
 }
 
