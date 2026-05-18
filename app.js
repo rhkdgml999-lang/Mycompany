@@ -569,13 +569,14 @@ function renderEditQnA(id) {
         <div class="form-group" style="margin-top: 20px; padding: 15px; border: 1px dashed #ccc; border-radius: 8px;">
           <label class="form-label">${currentLang === 'ko' ? '첨부파일 수정' : 'Edit Attachment'}</label>
           ${item.attachment ? `
-            <div id="current-attachment" style="margin-bottom: 10px; font-size: 0.9rem; color: #666;">
-              ${currentLang === 'ko' ? '현재 파일' : 'Current file'}: ${item.attachment.name}
-              <button type="button" style="margin-left: 10px; color: #ff4d4f; border: none; background: none; cursor: pointer; text-decoration: underline;" onclick="removeAttachment()">${currentLang === 'ko' ? '삭제' : 'Delete'}</button>
+            <div id="current-attachment-box" style="margin-bottom: 10px; font-size: 0.95rem; display: flex; align-items: center; justify-content: space-between;">
+              <span>📄 ${item.attachment.name}</span>
+              <button type="button" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem; border-color: #ff4d4f; color: #ff4d4f;" onclick="removeAttachment()">${currentLang === 'ko' ? '파일 삭제' : 'Delete File'}</button>
             </div>
+            <input type="hidden" id="remove-attachment-flag" value="false">
           ` : ''}
-          <input type="file" id="edit-qna-file" class="form-control" style="padding: 10px;">
-          <p style="font-size: 0.8rem; color: #999; margin-top: 5px;">${currentLang === 'ko' ? '* 새로운 파일을 선택하면 기존 파일이 교체됩니다.' : '* Selecting a new file will replace the existing one.'}</p>
+          <input type="file" id="edit-qna-file" class="form-control" style="padding: 10px;" accept="image/*,application/pdf">
+          <p style="font-size: 0.82rem; color: #999; margin-top: 8px;">* ${currentLang === 'ko' ? '이미지나 PDF 파일을 최대 2MB까지 업로드할 수 있습니다.' : 'Upload Image or PDF up to 2MB.'}</p>
         </div>
 
         <div style="display: flex; gap: 10px; margin-top: 30px;">
@@ -590,39 +591,35 @@ function renderEditQnA(id) {
 }
 
 window.removeAttachment = () => {
-  if (confirm(currentLang === 'ko' ? "첨부파일을 삭제하시겠습니까?" : "Delete attachment?")) {
-    const el = document.getElementById('current-attachment');
-    if (el) {
-      el.style.display = 'none';
-      el.setAttribute('data-removed', 'true');
-    }
+  if (confirm(currentLang === 'ko' ? "현재 첨부된 파일을 삭제할까요?" : "Remove attachment?")) {
+    const box = document.getElementById('current-attachment-box');
+    const flag = document.getElementById('remove-attachment-flag');
+    if (box) box.style.opacity = '0.3';
+    if (flag) flag.value = 'true';
   }
 };
 
 async function handleEditQnASubmit(e, id) {
   e.preventDefault();
-  const t = translations[currentLang];
-  const newTitle = document.getElementById('edit-qna-title').value;
-  const newContent = document.getElementById('edit-qna-content').value;
+  const titleInput = document.getElementById('edit-qna-title');
+  const contentInput = document.getElementById('edit-qna-content');
   const fileInput = document.getElementById('edit-qna-file');
   const newFile = fileInput.files[0];
-  const attachmentRemoved = document.getElementById('current-attachment')?.getAttribute('data-removed') === 'true';
+  const removeFlag = document.getElementById('remove-attachment-flag')?.value === 'true';
 
   const item = qnaData.find(q => q.id == id);
   if (!item) return;
 
-  let attachment = item.attachment;
+  let finalAttachment = item.attachment;
   
-  if (attachmentRemoved) {
-    attachment = null;
-  }
-
+  if (removeFlag) finalAttachment = null;
+  
   if (newFile) {
-    if (newFile.size > 1024 * 1024) {
-      alert(currentLang === 'ko' ? "파일 크기는 1MB 이하여야 합니다." : "File size must be under 1MB.");
+    if (newFile.size > 2 * 1024 * 1024) {
+      alert(currentLang === 'ko' ? "파일 크기는 2MB 이하여야 합니다." : "File size must be under 2MB.");
       return;
     }
-    attachment = await new Promise((resolve) => {
+    finalAttachment = await new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (ev) => resolve({
         name: newFile.name,
@@ -682,8 +679,9 @@ function renderWriteQnA() {
         </div>
 
         <div class="form-group" style="margin-top: 20px;">
-          <label class="form-label">${currentLang === 'ko' ? '파일 첨부 (이미지/문서)' : 'Attach File (Image/Doc)'}</label>
-          <input type="file" id="qna-file" class="form-control" style="padding: 10px;">
+          <label class="form-label">${currentLang === 'ko' ? '파일 첨부 (이미지/PDF)' : 'Attach File (Image/PDF)'}</label>
+          <input type="file" id="qna-file" class="form-control" style="padding: 10px;" accept="image/*,application/pdf">
+          <p style="font-size: 0.82rem; color: #999; margin-top: 5px;">* ${currentLang === 'ko' ? '최대 2MB까지 첨부 가능합니다.' : 'Max 2MB allowed.'}</p>
         </div>
 
         <div style="display: flex; gap: 10px; margin-top: 30px;">
@@ -719,9 +717,9 @@ async function handleQnASubmit(e) {
   
   let attachment = null;
   if (file) {
-    // 1MB 제한 체크 (Firestore 저장 용량 고려)
-    if (file.size > 1024 * 1024) {
-      alert(currentLang === 'ko' ? "파일 크기는 1MB 이하여야 합니다." : "File size must be under 1MB.");
+    // 2MB 제한 체크
+    if (file.size > 2 * 1024 * 1024) {
+      alert(currentLang === 'ko' ? "파일 크기는 2MB 이하여야 합니다." : "File size must be under 2MB.");
       return;
     }
     
