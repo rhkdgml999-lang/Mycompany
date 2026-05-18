@@ -126,7 +126,7 @@ function handleRoute() {
   } else if (hash === '#qna') renderQnA();
   else if (hash === '#qna/write') renderWriteQnA();
   else if (hash.startsWith('#qna/view/')) {
-    const id = parseInt(hash.split('/')[2]);
+    const id = hash.split('/')[2];
     renderQnADetail(id);
   } else if (hash === '#products') renderProducts();
   else renderHome();
