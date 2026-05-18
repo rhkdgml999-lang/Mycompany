@@ -136,24 +136,7 @@ const newsData = [
   }
 ];
 
-let qnaData = [
-  {
-    id: 1,
-    title: { ko: "제품 구매처 문의드립니다.", en: "Inquiry about purchasing locations" },
-    author: "Kim*",
-    date: "2026-05-11",
-    isSecret: true,
-    status: { ko: "답변완료", en: "Completed" }
-  },
-  {
-    id: 2,
-    title: { ko: "대여 서비스 문의", en: "Rental service inquiry" },
-    author: "Park*",
-    date: "2026-05-10",
-    isSecret: false,
-    status: { ko: "검토중", en: "Pending" }
-  }
-];
+let qnaData = [];
 
 const appConfig = {
   companyName: "RG-ROBOTICS",
