@@ -136,24 +136,29 @@ function initRouter() {
   renderFooter();
 }
 
-function handleRoute() {
-  const hash = window.location.hash || '#home';
-  const main = document.querySelector('main');
-  const t = translations[currentLang];
+async function handleRoute() {
+  const hash = location.hash || '#home';
   
+  // Ensure data is synced if we are accessing a detail page directly on refresh
+  if (hash.startsWith('#qna/view/') || hash.startsWith('#qna/edit/') || hash === '#qna') {
+    if (qnaData.length === 0 && window.db) {
+       await syncQnAData();
+    }
+  }
+
   // Force scroll to top on every navigation
   window.scrollTo(0, 0);
 
-  if (hash === '#home') renderHome();
-  else if (hash === '#news') renderNews();
-  else if (hash.startsWith('#news/')) {
-    const id = parseInt(hash.split('/')[1]);
-    renderNewsDetail(id);
-  } else if (hash === '#qna') renderQnA();
+  if (hash === '#qna') renderQnA();
   else if (hash === '#qna/write') renderWriteQnA();
   else if (hash.startsWith('#qna/view/')) {
     const id = hash.split('/')[2];
     renderQnADetail(id);
+  } else if (hash === '#home') renderHome();
+  else if (hash === '#news') renderNews();
+  else if (hash.startsWith('#news/')) {
+    const id = parseInt(hash.split('/')[1]);
+    renderNewsDetail(id);
   } else if (hash === '#faq') {
     renderSupport('faq');
   } else if (hash === '#service') {
@@ -166,6 +171,21 @@ function handleRoute() {
     renderCompany();
   } else if (hash === '#products') renderProducts();
   else renderHome();
+}
+
+async function syncQnAData() {
+  if (!window.db || !window.firebaseDB) return;
+  const { collection, getDocs, query, orderBy } = window.firebaseDB;
+  try {
+    const qCount = query(collection(window.db, "qna"), orderBy("createdAt", "desc"));
+    const querySnapshot = await getDocs(qCount);
+    qnaData = querySnapshot.docs.map(doc => ({
+      ...doc.data(),
+      id: doc.id
+    }));
+  } catch (err) {
+    console.error("Sync failed:", err);
+  }
 }
 
 function renderHome() {
@@ -532,6 +552,19 @@ function renderEditQnA(id) {
           <label class="form-label">${t.content}</label>
           <textarea id="edit-qna-content" class="form-control" style="height: 250px;" required>${item.content ? (typeof item.content === 'object' ? item.content[currentLang] : item.content) : ''}</textarea>
         </div>
+
+        <div class="form-group" style="margin-top: 20px; padding: 15px; border: 1px dashed #ccc; border-radius: 8px;">
+          <label class="form-label">${currentLang === 'ko' ? '첨부파일 수정' : 'Edit Attachment'}</label>
+          ${item.attachment ? `
+            <div id="current-attachment" style="margin-bottom: 10px; font-size: 0.9rem; color: #666;">
+              ${currentLang === 'ko' ? '현재 파일' : 'Current file'}: ${item.attachment.name}
+              <button type="button" style="margin-left: 10px; color: #ff4d4f; border: none; background: none; cursor: pointer; text-decoration: underline;" onclick="removeAttachment()">${currentLang === 'ko' ? '삭제' : 'Delete'}</button>
+            </div>
+          ` : ''}
+          <input type="file" id="edit-qna-file" class="form-control" style="padding: 10px;">
+          <p style="font-size: 0.8rem; color: #999; margin-top: 5px;">${currentLang === 'ko' ? '* 새로운 파일을 선택하면 기존 파일이 교체됩니다.' : '* Selecting a new file will replace the existing one.'}</p>
+        </div>
+
         <div style="display: flex; gap: 10px; margin-top: 30px;">
           <button type="submit" class="btn btn-primary" style="flex: 1;">${t.submit}</button>
           <button type="button" class="btn btn-outline" onclick="location.hash='#qna/view/${id}'" style="flex: 1;">${t.cancel}</button>
@@ -543,11 +576,49 @@ function renderEditQnA(id) {
   document.getElementById('edit-qna-form').addEventListener('submit', (e) => handleEditQnASubmit(e, id));
 }
 
+window.removeAttachment = () => {
+  if (confirm(currentLang === 'ko' ? "첨부파일을 삭제하시겠습니까?" : "Delete attachment?")) {
+    const el = document.getElementById('current-attachment');
+    if (el) {
+      el.style.display = 'none';
+      el.setAttribute('data-removed', 'true');
+    }
+  }
+};
+
 async function handleEditQnASubmit(e, id) {
   e.preventDefault();
   const t = translations[currentLang];
   const newTitle = document.getElementById('edit-qna-title').value;
   const newContent = document.getElementById('edit-qna-content').value;
+  const fileInput = document.getElementById('edit-qna-file');
+  const newFile = fileInput.files[0];
+  const attachmentRemoved = document.getElementById('current-attachment')?.getAttribute('data-removed') === 'true';
+
+  const item = qnaData.find(q => q.id == id);
+  if (!item) return;
+
+  let attachment = item.attachment;
+  
+  if (attachmentRemoved) {
+    attachment = null;
+  }
+
+  if (newFile) {
+    if (newFile.size > 1024 * 1024) {
+      alert(currentLang === 'ko' ? "파일 크기는 1MB 이하여야 합니다." : "File size must be under 1MB.");
+      return;
+    }
+    attachment = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => resolve({
+        name: newFile.name,
+        type: newFile.type,
+        data: ev.target.result
+      });
+      reader.readAsDataURL(newFile);
+    });
+  }
 
   try {
     if (window.db && window.firebaseDB) {
