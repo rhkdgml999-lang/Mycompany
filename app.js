@@ -20,18 +20,54 @@ function initLanguageSwitcher() {
   const mobileBtn = document.querySelector('.mobile-menu-btn');
   const nav = document.querySelector('#main-nav');
   
+  // Create overlay if not exists
+  let overlay = document.querySelector('.menu-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.className = 'menu-overlay';
+    document.body.appendChild(overlay);
+  }
+  
+  // Move header-actions into nav for mobile if screen is small
+  const headerActions = document.querySelector('.header-actions');
+  const handleResize = () => {
+    if (window.innerWidth <= 900) {
+      if (headerActions.parentElement !== nav) {
+        nav.appendChild(headerActions);
+      }
+    } else {
+      const header = document.querySelector('header');
+      if (headerActions.parentElement !== header) {
+        header.appendChild(headerActions);
+      }
+    }
+  };
+  window.addEventListener('resize', handleResize);
+  handleResize();
+
   if (mobileBtn) {
     mobileBtn.addEventListener('click', () => {
-      nav.classList.toggle('active');
-      mobileBtn.textContent = nav.classList.contains('active') ? '✕' : '☰';
+      const isActive = nav.classList.toggle('active');
+      overlay.classList.toggle('active', isActive);
+      mobileBtn.textContent = isActive ? '✕' : '☰';
+      document.body.style.overflow = isActive ? 'hidden' : '';
     });
   }
+
+  overlay.addEventListener('click', () => {
+    nav.classList.remove('active');
+    overlay.classList.remove('active');
+    if (mobileBtn) mobileBtn.textContent = '☰';
+    document.body.style.overflow = '';
+  });
 
   // Close mobile menu when nav link clicked
   document.querySelectorAll('#main-nav a').forEach(link => {
     link.addEventListener('click', () => {
       nav.classList.remove('active');
+      overlay.classList.remove('active');
       if (mobileBtn) mobileBtn.textContent = '☰';
+      document.body.style.overflow = '';
     });
   });
 }
@@ -45,6 +81,9 @@ function setLanguage(lang) {
   navLinks[1].textContent = t.products;
   navLinks[2].textContent = t.news;
   navLinks[3].textContent = t.support;
+  
+  // Mobile only: Ensure actions are visible if needed or in menu
+  // (Optional: add more dynamic logic if requested)
   
   document.querySelector('.header-actions .btn-primary').textContent = t.contactUs;
   
@@ -417,7 +456,7 @@ function renderProducts() {
         </div>
         
         <div class="news-card">
-          <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1000" class="news-image">
+          <img src="prod_industrial.png" class="news-image">
           <div class="news-content">
             <h3 class="news-title">${currentLang === 'ko' ? 'RG Industrial (산업용 근력 보조)' : 'RG Industrial (Industrial Power Assist)'}</h3>
             <p style="color: var(--text-muted); margin-top: 10px;">
@@ -429,7 +468,7 @@ function renderProducts() {
         </div>
 
         <div class="news-card">
-          <img src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&q=80&w=1000" class="news-image">
+          <img src="prod_core.png" class="news-image">
           <div class="news-content">
             <h3 class="news-title">${currentLang === 'ko' ? 'RG Core (로봇 핵심 구동 모듈)' : 'RG Core (Core Robotic Drive Module)'}</h3>
             <p style="color: var(--text-muted); margin-top: 10px;">

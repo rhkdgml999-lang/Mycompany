@@ -18,7 +18,7 @@ const translations = {
     nextPost: "다음글",
     list: "목록",
     qnaTitle: "고객 지원 Q&A",
-    qnaDesc: "엔젤로보틱스에 궁금하신 점을 남겨주세요. 전문 상담사가 확인 후 답변 드립니다.",
+    qnaDesc: "RG ROBOTICS에 궁금하신 점을 남겨주세요. 전문 상담사가 확인 후 답변 드립니다.",
     write: "문의하기",
     no: "번호",
     title: "제목",
@@ -87,7 +87,7 @@ const newsData = [
     category: { ko: "공지", en: "Notice" },
     title: { ko: "[공지] 2026년 정기 주주총회 소집 안내", en: "[Notice] 2026 Annual Shareholders Meeting" },
     content: { 
-      ko: "엔젤로보틱스의 2026년 정기 주주총회 소집 및 진행 방식에 대해 안내드립니다. 당사는 이번 주주총회를 통해 미래 성장을 위한 핵심 전략을 공유하고자 합니다.", 
+      ko: "RG-ROBOTICS의 2026년 정기 주주총회 소집 및 진행 방식에 대해 안내드립니다. 당사는 이번 주주총회를 통해 미래 성장을 위한 핵심 전략을 공유하고자 합니다.", 
       en: "Information on the 2026 Annual General Meeting of Shareholders of RG-ROBOTICS. We plan to share key strategies for future growth." 
     },
     date: "2026-05-10",
@@ -109,10 +109,10 @@ const newsData = [
   {
     id: 3,
     category: { ko: "블로그", en: "Blog" },
-    title: { ko: "웨어러블 로봇이 바꾸는 일상의 변화: '엔젤 슈트' 개발 비하인드", en: "How Wearable Robots are Changing Daily Life: Behind the 'Angel Suit'" },
+    title: { ko: "웨어러블 로봇이 바꾸는 일상의 변화: 'RG 슈트' 개발 비하인드", en: "How Wearable Robots are Changing Daily Life: Behind the 'RG Suit'" },
     content: { 
-      ko: "일상 생활에서 도움을 줄 수 있는 보조 로봇 '엔젤 슈트'의 개발 과정과 엔지니어들의 치열한 고민을 담았습니다. 더 가볍고, 더 똑똑한 로봇을 향한 여정입니다.", 
-      en: "This post covers the development process of 'Angel Suit' and the intense deliberations of engineers. It's a journey towards lighter and smarter robots." 
+      ko: "일상 생활에서 도움을 줄 수 있는 보조 로봇 'RG 슈트'의 개발 과정과 엔지니어들의 치열한 고민을 담았습니다. 더 가볍고, 더 똑똑한 로봇을 향한 여정입니다.", 
+      en: "This post covers the development process of 'RG Suit' and the intense deliberations of engineers. It's a journey towards lighter and smarter robots." 
     },
     date: "2026-05-05",
     views: 890,

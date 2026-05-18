@@ -1,22 +1,29 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Angel Robotics - Leading High-Tech Company</title>
-    <meta name="description" content="엔젤로보틱스는 인간의 능력을 확장하는 웨어러블 로봇 전문 기업입니다.">
-    
+    <title>RG ROBOTICS - Leading High-Tech Company</title>
+    <meta name="description" content="RG ROBOTICS는 인간의 능력을 확장하는 웨어러블 로봇 전문 기업입니다.">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Noto+Sans+KR:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Noto+Sans+KR:wght@300;400;500;700;800&display=swap"
+        rel="stylesheet">
+
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <header>
-        <a href="#home" class="logo">RG-ROBOTICS</a>
-        
+        <a href="#home" class="logo">
+            <img src="logo_rg.png" alt="RG ROBOTICS" class="logo-img">
+            <span>RG ROBOTICS</span>
+        </a>
+
         <!-- Mobile Menu Toggle -->
         <button class="mobile-menu-btn">☰</button>
 
@@ -45,7 +52,7 @@
     <footer>
         <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 40px;">
             <div>
-                <h3 style="margin-bottom: 20px;">ANGEL ROBOTICS</h3>
+                <h3 style="margin-bottom: 20px;">RG ROBOTICS</h3>
                 <p style="color: #888; max-width: 300px;">인간의 한계를 넘어서는 기술로<br>세상을 더 따뜻하게 만듭니다.</p>
             </div>
             <div>
@@ -65,8 +72,9 @@
                 </ul>
             </div>
         </div>
-        <div style="margin-top: 60px; padding-top: 30px; border-top: 1px solid #333; color: #555; font-size: 0.85rem; text-align: center;">
-            &copy; 2026 Angel Robotics. All rights reserved.
+        <div
+            style="margin-top: 60px; padding-top: 30px; border-top: 1px solid #333; color: #555; font-size: 0.85rem; text-align: center;">
+            &copy; 2026 RG ROBOTICS. All rights reserved.
         </div>
     </footer>
 
@@ -87,11 +95,12 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        window.db = db; 
+        window.db = db;
         window.firebaseDB = { collection, addDoc, getDocs, query, orderBy }; 
     </script>
 
     <script src="data.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>
