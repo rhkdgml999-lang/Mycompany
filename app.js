@@ -264,8 +264,8 @@ async function renderQnA() {
       const q = query(collection(window.db, "qna"), orderBy("createdAt", "desc"));
       const querySnapshot = await getDocs(q);
       const firebasePosts = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
+        ...doc.data(),
+        id: doc.id
       }));
       
       // Firebase 데이터가 있으면 기존 정적 데이터와 합침 (중복 방지는 id 등으로 체크 가능)
@@ -356,24 +356,30 @@ function renderQnADetail(id) {
 }
 
 async function handleDeleteQnA(id) {
+  console.log("Attempting to delete post with id:", id);
   const t = translations[currentLang];
   if (!confirm(currentLang === 'ko' ? "정말로 삭제하시겠습니까?" : "Are you sure you want to delete this?")) return;
 
   try {
-    if (window.db && window.firebaseDB) {
+    // Firebase 데이터인 경우 (id가 숫지 1, 2가 아닌 긴 문자열인 경우)에만 Firestore 삭제 수행
+    if (window.db && window.firebaseDB && isNaN(id)) {
       const { doc, deleteDoc } = window.firebaseDB;
-      await deleteDoc(doc(window.db, "qna", id.toString()));
+      const postRef = doc(window.db, "qna", id.toString());
+      await deleteDoc(postRef);
+      console.log("Firebase document deleted successfully");
     }
     
     // 로컬 데이터에서도 삭제
     const index = qnaData.findIndex(q => q.id == id);
-    if (index !== -1) qnaData.splice(index, 1);
+    if (index !== -1) {
+      qnaData.splice(index, 1);
+    }
     
     alert(currentLang === 'ko' ? "삭제되었습니다." : "Deleted successfully.");
     location.hash = '#qna';
   } catch (err) {
-    console.error("Delete failed:", err);
-    alert(currentLang === 'ko' ? "삭제에 실패했습니다." : "Failed to delete.");
+    console.error("Delete failed with error:", err);
+    alert(currentLang === 'ko' ? "삭제에 실패했습니다. (Firestore 권한 또는 데이터를 확인해주세요)" : "Failed to delete. (Check Firestore permissions or data)");
   }
 }
 

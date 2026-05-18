@@ -136,7 +136,7 @@ const newsData = [
   }
 ];
 
-const qnaData = [
+let qnaData = [
   {
     id: 1,
     title: { ko: "제품 구매처 문의드립니다.", en: "Inquiry about purchasing locations" },
