@@ -19,7 +19,7 @@ function initLanguageSwitcher() {
   // Mobile Menu Logic
   const mobileBtn = document.querySelector('.mobile-menu-btn');
   const nav = document.querySelector('#main-nav');
-  
+
   // Create overlay if not exists
   let overlay = document.querySelector('.menu-overlay');
   if (!overlay) {
@@ -27,7 +27,7 @@ function initLanguageSwitcher() {
     overlay.className = 'menu-overlay';
     document.body.appendChild(overlay);
   }
-  
+
   // Move header-actions into nav for mobile if screen is small
   const headerActions = document.querySelector('.header-actions');
   const handleResize = () => {
@@ -76,13 +76,13 @@ function setLanguage(lang) {
   currentLang = lang;
   // Update header/nav UI
   const t = translations[lang];
-  
+
   // Ensure Logo is preserved (fix for previous selector collision)
   const logoLink = document.querySelector('.logo');
   if (logoLink) {
     logoLink.innerHTML = `<img src="logo_rg.png" alt="RG ROBOTICS Logo" class="logo-img"> RG ROBOTICS`;
   }
-  
+
   document.querySelector('#main-nav a[href="#home"]').textContent = t.home;
   document.querySelector('#main-nav a[href="#company"]').textContent = t.company;
   document.querySelector('#main-nav a[href="#careers"]').textContent = t.careers;
@@ -92,32 +92,32 @@ function setLanguage(lang) {
   document.querySelector('#main-nav a[href="#faq"]').textContent = t.supportFAQ;
   document.querySelector('#main-nav a[href="#qna"]').textContent = t.supportQnA;
   document.querySelector('#main-nav a[href="#service"]').textContent = t.supportService;
-  
+
   // Mobile only: Ensure actions are visible if needed or in menu
   // (Optional: add more dynamic logic if requested)
-  
+
   document.querySelector('.header-actions .btn-primary').textContent = t.contactUs;
-  
+
   // Update Chatbot UI
   const chatHeader = document.querySelector('.chat-header h3');
   const chatInput = document.getElementById('chat-input');
   const chatSend = document.getElementById('chat-send');
   const firstBotMsg = document.querySelector('#chat-messages .message.bot:first-child');
-  
+
   if (chatHeader) chatHeader.textContent = lang === 'ko' ? 'RG AI Assistant' : 'RG AI Assistant'; // Title is same
   if (chatInput) chatInput.placeholder = lang === 'ko' ? '메시지를 입력하세요...' : 'Type a message...';
   if (chatSend) chatSend.textContent = lang === 'ko' ? '전송' : 'Send';
   if (firstBotMsg) {
-    firstBotMsg.textContent = lang === 'ko' 
-      ? '안녕하세요! RG ROBOTICS AI 비서입니다. 무엇을 도와드릴까요?' 
+    firstBotMsg.textContent = lang === 'ko'
+      ? '안녕하세요! RG ROBOTICS AI 비서입니다. 무엇을 도와드릴까요?'
       : 'Hello! I am the RG ROBOTICS AI assistant. How can I help you?';
   }
-  
+
   // Update Footer UI
   const footerDocs = document.querySelectorAll('footer h3, footer h4, footer p, footer li');
   // Simple footer update (ideally would be mapped more specifically)
   // Re-rendering footer is easier if it's dynamic, but for now let's just re-run handleRoute
-  
+
   // Update active lang btn style
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.classList.remove('active');
@@ -149,11 +149,11 @@ function initRouter() {
 
 async function handleRoute() {
   const hash = location.hash || '#home';
-  
+
   // Ensure data is synced if we are accessing a detail page directly on refresh
   if (hash.startsWith('#qna/view/') || hash.startsWith('#qna/edit/') || hash === '#qna') {
     if (qnaData.length === 0 && window.db) {
-       await syncQnAData();
+      await syncQnAData();
     }
   }
 
@@ -165,6 +165,9 @@ async function handleRoute() {
   else if (hash.startsWith('#qna/view/')) {
     const id = hash.split('/')[2];
     renderQnADetail(id);
+  } else if (hash.startsWith('#qna/edit/')) {
+    const id = hash.split('/')[2];
+    renderEditQnA(id);
   } else if (hash === '#home') renderHome();
   else if (hash === '#news') renderNews();
   else if (hash.startsWith('#news/')) {
@@ -242,7 +245,7 @@ function renderHome() {
 function renderNews(filter = 'all') {
   const main = document.querySelector('main');
   const t = translations[currentLang];
-  
+
   // Mapping filter English keys to Korean categories for internal filtering
   const filterMap = {
     'notice': currentLang === 'ko' ? '공지' : 'Notice',
@@ -250,12 +253,12 @@ function renderNews(filter = 'all') {
     'blog': currentLang === 'ko' ? '블로그' : 'Blog'
   };
 
-  const filteredData = filter === 'all' 
-    ? newsData 
+  const filteredData = filter === 'all'
+    ? newsData
     : newsData.filter(item => {
-        const cat = item.category[currentLang];
-        return cat === filterMap[filter] || cat === filter; // Support both cases
-      });
+      const cat = item.category[currentLang];
+      return cat === filterMap[filter] || cat === filter; // Support both cases
+    });
 
   main.innerHTML = `
     <section class="container">
@@ -334,7 +337,7 @@ async function renderQnA() {
         ...doc.data(),
         id: doc.id
       }));
-      
+
       // Firebase 데이터가 있으면 기존 정적 데이터와 합침 (중복 방지는 id 등으로 체크 가능)
       // 여기서는 Firebase 데이터를 우선적으로 표시
       if (firebasePosts.length > 0) {
@@ -415,12 +418,12 @@ function renderQnADetail(id) {
       ${item.attachment ? `
         <div style="margin: 20px 0; padding: 15px; background: #f0f4ff; border-radius: 8px; font-size: 0.9rem;">
           <strong style="display: block; margin-bottom: 8px;">📎 ${currentLang === 'ko' ? '첨부파일' : 'Attachment'}</strong>
-          ${item.attachment.type.startsWith('image/') 
-            ? `<img src="${item.attachment.data}" style="max-width: 100%; border-radius: 8px; cursor: pointer;" onclick="window.open(this.src)">`
-            : item.attachment.type === 'application/pdf'
-            ? `<embed src="${item.attachment.data}" type="application/pdf" width="100%" height="500px" style="border-radius: 8px;">`
-            : `<a href="${item.attachment.data}" download="${item.attachment.name}" style="color: var(--primary-color); text-decoration: underline;">${item.attachment.name}</a>`
-          }
+          ${item.attachment.type.startsWith('image/')
+        ? `<img src="${item.attachment.data}" style="max-width: 100%; border-radius: 8px; cursor: pointer;" onclick="window.open(this.src)">`
+        : item.attachment.type === 'application/pdf'
+          ? `<embed src="${item.attachment.data}" type="application/pdf" width="100%" height="500px" style="border-radius: 8px;">`
+          : `<a href="${item.attachment.data}" download="${item.attachment.name}" style="color: var(--primary-color); text-decoration: underline;">${item.attachment.name}</a>`
+      }
         </div>
       ` : ''}
       
@@ -429,7 +432,7 @@ function renderQnADetail(id) {
       </div>
       <div style="text-align: center; display: flex; gap: 10px; justify-content: center;">
         <button class="btn btn-primary" onclick="location.hash='#qna'">${t.list}</button>
-        <button class="btn btn-outline" style="border-color: #ddd;" onclick="renderEditQnA('${item.id}')">${t.edit}</button>
+        <button class="btn btn-outline" style="border-color: #ddd;" onclick="location.hash='#qna/edit/${item.id}'">${t.edit}</button>
         <button class="btn btn-outline" style="color: #ff4d4f; border-color: #ff4d4f;" onclick="handleDeleteQnA('${item.id}')">${t.delete}</button>
       </div>
 
@@ -523,13 +526,13 @@ async function handleDeleteQnA(id) {
       await deleteDoc(postRef);
       console.log("Firebase document deleted successfully");
     }
-    
+
     // 로컬 데이터에서도 삭제
     const index = qnaData.findIndex(q => q.id == id);
     if (index !== -1) {
       qnaData.splice(index, 1);
     }
-    
+
     alert(currentLang === 'ko' ? "삭제되었습니다." : "Deleted successfully.");
     location.hash = '#qna';
   } catch (err) {
@@ -603,17 +606,29 @@ async function handleEditQnASubmit(e, id) {
   e.preventDefault();
   const titleInput = document.getElementById('edit-qna-title');
   const contentInput = document.getElementById('edit-qna-content');
+  const newTitle = titleInput.value;
+  const newContent = contentInput.value;
   const fileInput = document.getElementById('edit-qna-file');
   const newFile = fileInput.files[0];
   const removeFlag = document.getElementById('remove-attachment-flag')?.value === 'true';
+
+  // Spam/Profanity Filter
+  const bannedWords = ['씨발', '병신', '개새끼', '좆까', '광고'];
+  const foundWord = bannedWords.find(word => newTitle.toLowerCase().includes(word) || newContent.toLowerCase().includes(word));
+  if (foundWord) {
+    alert(currentLang === 'ko'
+      ? `부적절한 단어('${foundWord}')가 포함되어 있습니다. 내용을 수정해주세요.`
+      : `Inappropriate word ('${foundWord}') detected. Please check your content.`);
+    return;
+  }
 
   const item = qnaData.find(q => q.id == id);
   if (!item) return;
 
   let finalAttachment = item.attachment;
-  
+
   if (removeFlag) finalAttachment = null;
-  
+
   if (newFile) {
     if (newFile.size > 2 * 1024 * 1024) {
       alert(currentLang === 'ko' ? "파일 크기는 2MB 이하여야 합니다." : "File size must be under 2MB.");
@@ -640,7 +655,7 @@ async function handleEditQnASubmit(e, id) {
       };
       await updateDoc(doc(window.db, "qna", id.toString()), dataToUpdate);
     }
-    
+
     // 로컬 데이터 업데이트
     const item = qnaData.find(q => q.id == id);
     if (item) {
@@ -705,8 +720,8 @@ async function handleQnASubmit(e) {
   const bannedWords = ['욕설', '나쁜말', '바보', '스팸', '광고'];
   const foundWord = bannedWords.find(word => title.includes(word) || content.includes(word));
   if (foundWord) {
-    alert(currentLang === 'ko' 
-      ? `부적절한 단어('${foundWord}')가 포함되어 있습니다. 바른 말을 사용해주세요.` 
+    alert(currentLang === 'ko'
+      ? `부적절한 단어('${foundWord}')가 포함되어 있습니다. 바른 말을 사용해주세요.`
       : `Inappropriate word ('${foundWord}') detected. Please use proper language.`);
     return;
   }
@@ -714,7 +729,7 @@ async function handleQnASubmit(e) {
   const isSecret = document.getElementById('qna-is-secret').checked;
   const fileInput = document.getElementById('qna-file');
   const file = fileInput.files[0];
-  
+
   let attachment = null;
   if (file) {
     // 2MB 제한 체크
@@ -722,7 +737,7 @@ async function handleQnASubmit(e) {
       alert(currentLang === 'ko' ? "파일 크기는 2MB 이하여야 합니다." : "File size must be under 2MB.");
       return;
     }
-    
+
     // 파일을 Base64로 변환
     attachment = await new Promise((resolve) => {
       const reader = new FileReader();
@@ -782,9 +797,9 @@ function renderProducts() {
     <section class="container">
       <h1 class="section-title">${t.products}</h1>
       <p style="text-align: center; margin-bottom: 60px; color: var(--text-muted); max-width: 800px; margin-left: auto; margin-right: auto;">
-        ${currentLang === 'ko' 
-          ? 'RG-ROBOTICS의 최신 기술이 집약된 제품 라인업을 소개합니다. 우리는 인간의 삶을 더 가치 있게 만드는 기술을 연구합니다.' 
-          : 'Introducing RG-ROBOTICS product lineup, where the latest technology is concentrated. We research technology that makes human life more valuable.'}
+        ${currentLang === 'ko'
+      ? 'RG-ROBOTICS의 최신 기술이 집약된 제품 라인업을 소개합니다. 우리는 인간의 삶을 더 가치 있게 만드는 기술을 연구합니다.'
+      : 'Introducing RG-ROBOTICS product lineup, where the latest technology is concentrated. We research technology that makes human life more valuable.'}
       </p>
       
       <div class="news-grid">
@@ -793,9 +808,9 @@ function renderProducts() {
           <div class="news-content">
             <h3 class="news-title">${currentLang === 'ko' ? 'RG Medica (의료용 재활 로봇)' : 'RG Medica (Medical Rehab Robot)'}</h3>
             <p style="color: var(--text-muted); margin-top: 10px;">
-              ${currentLang === 'ko' 
-                ? '보행 재활이 필요한 환자를 위한 인공지능 기반 웨어러블 로봇입니다. 환자의 보행 패턴을 분석하여 최적의 보조력을 제공합니다.' 
-                : 'AI-based wearable robot for patients in need of gait rehabilitation. Analyzes gait patterns to provide optimal assistance.'}
+              ${currentLang === 'ko'
+      ? '보행 재활이 필요한 환자를 위한 인공지능 기반 웨어러블 로봇입니다. 환자의 보행 패턴을 분석하여 최적의 보조력을 제공합니다.'
+      : 'AI-based wearable robot for patients in need of gait rehabilitation. Analyzes gait patterns to provide optimal assistance.'}
             </p>
           </div>
         </div>
@@ -805,9 +820,9 @@ function renderProducts() {
           <div class="news-content">
             <h3 class="news-title">${currentLang === 'ko' ? 'RG Industrial (산업용 근력 보조)' : 'RG Industrial (Industrial Power Assist)'}</h3>
             <p style="color: var(--text-muted); margin-top: 10px;">
-              ${currentLang === 'ko' 
-                ? '물류 및 제조 현장에서 작업자의 근력을 보조하여 부상을 방지하고 효율을 극대화합니다. 고강도 탄소 섬유 소재로 내구성이 뛰어납니다.' 
-                : 'Assists workers in logistics and manufacturing to prevent injuries and maximize efficiency. High durability with carbon fiber.'}
+              ${currentLang === 'ko'
+      ? '물류 및 제조 현장에서 작업자의 근력을 보조하여 부상을 방지하고 효율을 극대화합니다. 고강도 탄소 섬유 소재로 내구성이 뛰어납니다.'
+      : 'Assists workers in logistics and manufacturing to prevent injuries and maximize efficiency. High durability with carbon fiber.'}
             </p>
           </div>
         </div>
@@ -817,9 +832,9 @@ function renderProducts() {
           <div class="news-content">
             <h3 class="news-title">${currentLang === 'ko' ? 'RG Core (로봇 핵심 구동 모듈)' : 'RG Core (Core Robotic Drive Module)'}</h3>
             <p style="color: var(--text-muted); margin-top: 10px;">
-              ${currentLang === 'ko' 
-                ? '고정밀 감속기와 고출력 모터가 통합된 일체형 구동 모듈입니다. 로보틱스의 심장을 직접 개발하여 공급합니다.' 
-                : 'Integrated drive module with high-precision reducer and high-output motor. We develop and supply the heart of robotics.'}
+              ${currentLang === 'ko'
+      ? '고정밀 감속기와 고출력 모터가 통합된 일체형 구동 모듈입니다. 로보틱스의 심장을 직접 개발하여 공급합니다.'
+      : 'Integrated drive module with high-precision reducer and high-output motor. We develop and supply the heart of robotics.'}
             </p>
           </div>
         </div>
@@ -831,7 +846,7 @@ function renderProducts() {
 function renderSupport(sub) {
   const main = document.querySelector('main');
   const t = translations[currentLang];
-  
+
   let content = '';
   if (sub === 'faq') {
     content = `
@@ -881,7 +896,7 @@ function renderSupport(sub) {
       </section>
     `;
   }
-  
+
   main.innerHTML = content;
 }
 
@@ -926,22 +941,22 @@ function renderFooter() {
 }
 
 window.copyToClipboard = () => {
-    navigator.clipboard.writeText(window.location.href);
-    alert(currentLang === 'ko' ? "링크가 복사되었습니다!" : "Link copied to clipboard!");
+  navigator.clipboard.writeText(window.location.href);
+  alert(currentLang === 'ko' ? "링크가 복사되었습니다!" : "Link copied to clipboard!");
 };
 
 window.shareSNS = (platform) => {
-    const url = encodeURIComponent(window.location.href);
-    let shareUrl = '';
-    if (platform === 'facebook') shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
-    if (platform === 'kakao') shareUrl = `https://sharer.kakao.com/talk/friends/picker/link?url=${url}`;
-    window.open(shareUrl, '_blank', 'width=600,height=400');
+  const url = encodeURIComponent(window.location.href);
+  let shareUrl = '';
+  if (platform === 'facebook') shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+  if (platform === 'kakao') shareUrl = `https://sharer.kakao.com/talk/friends/picker/link?url=${url}`;
+  window.open(shareUrl, '_blank', 'width=600,height=400');
 };
 
 function renderCompany() {
-    const main = document.querySelector('main');
-    const t = translations[currentLang];
-    main.innerHTML = `
+  const main = document.querySelector('main');
+  const t = translations[currentLang];
+  main.innerHTML = `
         <section class="container">
             <h1 class="section-title">${t.company}</h1>
             <div style="max-width: 900px; margin: 0 auto;">
@@ -950,14 +965,14 @@ function renderCompany() {
                         ${currentLang === 'ko' ? '인간과 기술의 따뜻한 공존, RG ROBOTICS' : 'Warm Coexistence of Human and Technology, RG ROBOTICS'}
                     </h2>
                     <p style="margin-bottom: 20px;">
-                        ${currentLang === 'ko' 
-                          ? 'RG ROBOTICS는 웨어러블 로보틱스 기술을 기반으로 인간의 신체적 한계를 극복하고 삶의 질을 향상시키는 것을 목표로 합니다. 의료용 보행 지원 로봇부터 산업 현장의 근력 보조 솔루션까지, 우리는 일상의 모든 움직임에 새로운 가능성을 더합니다.' 
-                          : 'RG ROBOTICS aims to overcome human physical limits and improve quality of life based on wearable robotics technology. From medical gait support robots to strength-assist solutions in industrial sites, we add new possibilities to every movement of daily life.'}
+                        ${currentLang === 'ko'
+      ? 'RG ROBOTICS는 웨어러블 로보틱스 기술을 기반으로 인간의 신체적 한계를 극복하고 삶의 질을 향상시키는 것을 목표로 합니다. 의료용 보행 지원 로봇부터 산업 현장의 근력 보조 솔루션까지, 우리는 일상의 모든 움직임에 새로운 가능성을 더합니다.'
+      : 'RG ROBOTICS aims to overcome human physical limits and improve quality of life based on wearable robotics technology. From medical gait support robots to strength-assist solutions in industrial sites, we add new possibilities to every movement of daily life.'}
                     </p>
                     <p>
                         ${currentLang === 'ko'
-                          ? '우리의 기술은 단순히 기계를 만드는 것에 그치지 않습니다. 누군가에게는 다시 걷는 기쁨을, 누군가에게는 안전하고 가벼운 노동 환경을 선사하는 "사람을 향한 기술"을 지향합니다.'
-                          : 'Our technology does not stop at just making machines. We aim for "technology for people" that gives the joy of walking again to someone and a safe and light working environment to someone else.'}
+      ? '우리의 기술은 단순히 기계를 만드는 것에 그치지 않습니다. 누군가에게는 다시 걷는 기쁨을, 누군가에게는 안전하고 가벼운 노동 환경을 선사하는 "사람을 향한 기술"을 지향합니다.'
+      : 'Our technology does not stop at just making machines. We aim for "technology for people" that gives the joy of walking again to someone and a safe and light working environment to someone else.'}
                     </p>
                 </div>
                 
@@ -983,9 +998,9 @@ function renderCompany() {
 }
 
 function renderCareers() {
-    const main = document.querySelector('main');
-    const t = translations[currentLang];
-    main.innerHTML = `
+  const main = document.querySelector('main');
+  const t = translations[currentLang];
+  main.innerHTML = `
         <section class="container">
             <h1 class="section-title">${t.careers}</h1>
             <div style="max-width: 800px; margin: 0 auto;">
@@ -994,9 +1009,9 @@ function renderCareers() {
                         ${currentLang === 'ko' ? 'RG-ROBOTICS와 함께 세상을 바꿀 동료를 찾습니다.' : 'Looking for colleagues to change the world with RG-ROBOTICS.'}
                     </h2>
                     <p style="color: var(--text-muted); line-height: 1.8; margin-bottom: 40px;">
-                        ${currentLang === 'ko' 
-                          ? '우리는 기술로 인간의 한계를 극복하고 더 나은 미래를 만듭니다.<br>로보틱스, AI, 임베디드 등 다양한 분야의 인재를 상시 채용 중입니다.' 
-                          : 'We overcome human limits through technology and create a better future.<br>Open positions in robotics, AI, embedded systems, and more.'}
+                        ${currentLang === 'ko'
+      ? '우리는 기술로 인간의 한계를 극복하고 더 나은 미래를 만듭니다.<br>로보틱스, AI, 임베디드 등 다양한 분야의 인재를 상시 채용 중입니다.'
+      : 'We overcome human limits through technology and create a better future.<br>Open positions in robotics, AI, embedded systems, and more.'}
                     </p>
                     <a href="mailto:careers@rg-robotics.com" class="btn btn-primary">
                         ${currentLang === 'ko' ? '지원하기 (Email)' : 'Apply Now (Email)'}
@@ -1009,108 +1024,108 @@ function renderCareers() {
 
 /* Chatbot Logic */
 document.addEventListener('DOMContentLoaded', () => {
-    const chatToggle = document.getElementById('chatbot-toggle');
-    const chatClose = document.getElementById('chat-close');
-    const chatWindow = document.getElementById('chat-window');
-    const chatInput = document.getElementById('chat-input');
-    const chatSend = document.getElementById('chat-send');
-    const chatMessages = document.getElementById('chat-messages');
+  const chatToggle = document.getElementById('chatbot-toggle');
+  const chatClose = document.getElementById('chat-close');
+  const chatWindow = document.getElementById('chat-window');
+  const chatInput = document.getElementById('chat-input');
+  const chatSend = document.getElementById('chat-send');
+  const chatMessages = document.getElementById('chat-messages');
 
-    if (chatToggle && chatWindow) {
-        chatToggle.addEventListener('click', () => {
-            chatWindow.classList.toggle('hidden');
-            if (!chatWindow.classList.contains('hidden')) {
-                chatInput.focus();
-            }
-        });
+  if (chatToggle && chatWindow) {
+    chatToggle.addEventListener('click', () => {
+      chatWindow.classList.toggle('hidden');
+      if (!chatWindow.classList.contains('hidden')) {
+        chatInput.focus();
+      }
+    });
 
-        chatClose.addEventListener('click', () => {
-            chatWindow.classList.add('hidden');
-        });
+    chatClose.addEventListener('click', () => {
+      chatWindow.classList.add('hidden');
+    });
 
-        const sendMessage = () => {
-            const text = chatInput.value.trim();
-            if (!text) return;
+    const sendMessage = () => {
+      const text = chatInput.value.trim();
+      if (!text) return;
 
-            addMessage(text, 'user');
-            chatInput.value = '';
+      addMessage(text, 'user');
+      chatInput.value = '';
 
-            // Keyword based response logic
-            setTimeout(() => {
-                const response = getBotResponse(text);
-                addMessage(response, 'bot');
-            }, 600);
-        };
+      // Keyword based response logic
+      setTimeout(() => {
+        const response = getBotResponse(text);
+        addMessage(response, 'bot');
+      }, 600);
+    };
 
-        chatSend.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
+    chatSend.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  }
+
+  function addMessage(text, sender) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${sender}`;
+    msgDiv.textContent = text;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function getBotResponse(input) {
+    const text = input.toLowerCase();
+
+    // Greeting
+    if (text.includes('안녕') || text.includes('반가워') || text.includes('hello') || text.includes('hi')) {
+      return currentLang === 'ko'
+        ? '안녕하세요! RG ROBOTICS AI 비서입니다. 무엇을 도와드릴까요?'
+        : 'Hello! I am the RG ROBOTICS AI assistant. How can I help you?';
     }
 
-    function addMessage(text, sender) {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${sender}`;
-        msgDiv.textContent = text;
-        chatMessages.appendChild(msgDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+    // Products
+    if (text.includes('제품') || text.includes('로봇') || text.includes('웨어러블') || text.includes('product') || text.includes('robot')) {
+      return currentLang === 'ko'
+        ? 'RG ROBOTICS는 Medica(의료), Industrial(산업), Core(구동모듈) 라인업을 보유하고 있습니다. 자세한 내용은 "제품" 메뉴를 확인해 보세요.'
+        : 'RG ROBOTICS offers Medica (Medical), Industrial (Power Assist), and Core (Drive Module) lineups. Please check the "Products" menu for details.';
     }
 
-    function getBotResponse(input) {
-        const text = input.toLowerCase();
-        
-        // Greeting
-        if (text.includes('안녕') || text.includes('반가워') || text.includes('hello') || text.includes('hi')) {
-            return currentLang === 'ko' 
-                ? '안녕하세요! RG ROBOTICS AI 비서입니다. 무엇을 도와드릴까요?' 
-                : 'Hello! I am the RG ROBOTICS AI assistant. How can I help you?';
-        }
-        
-        // Products
-        if (text.includes('제품') || text.includes('로봇') || text.includes('웨어러블') || text.includes('product') || text.includes('robot')) {
-            return currentLang === 'ko'
-                ? 'RG ROBOTICS는 Medica(의료), Industrial(산업), Core(구동모듈) 라인업을 보유하고 있습니다. 자세한 내용은 "제품" 메뉴를 확인해 보세요.'
-                : 'RG ROBOTICS offers Medica (Medical), Industrial (Power Assist), and Core (Drive Module) lineups. Please check the "Products" menu for details.';
-        }
-        
-        // Price / Purchase
-        if (text.includes('가격') || text.includes('구매') || text.includes('얼마') || text.includes('price') || text.includes('buy') || text.includes('purchase')) {
-            return currentLang === 'ko'
-                ? '제품별 가격 및 구매 방법은 고객님의 용도에 따라 다를 수 있습니다. 정확한 견적은 "문의하기"를 통해 남겨주시면 상담원이 연락드리겠습니다.'
-                : 'Pricing and purchasing methods vary by product and use case. Please leave an inquiry through "Contact Us" for a formal quote.';
-        }
-
-        // Location
-        if (text.includes('위치') || text.includes('주소') || text.includes('어디') || text.includes('location') || text.includes('address') || text.includes('where')) {
-            return currentLang === 'ko'
-                ? '본사는 서울특별시 구로구 경인로 445에 위치하고 있습니다. 방문 시 미리 예약 부탁드립니다.'
-                : 'Our headquarters is located at 445 Gyeongin-ro, Guro-gu, Seoul. Please make an appointment before visiting.';
-        }
-        
-        // Contact / Support
-        if (text.includes('연락') || text.includes('문의') || text.includes('전화') || text.includes('번호') || text.includes('contact') || text.includes('call') || text.includes('support')) {
-            return currentLang === 'ko'
-                ? '대표번호: 010-1234-5678, 이메일: support@rg-robotics.com 입니다. 고객센터 운영 시간은 평일 09:00~18:00입니다.'
-                : 'Phone: +82 10-1234-5678, Email: support@rg-robotics.com. Business hours are weekdays 09:00~18:00 (KST).';
-        }
-        
-        // Career
-        if (text.includes('채용') || text.includes('입사') || text.includes('취업') || text.includes('career') || text.includes('job') || text.includes('hiring')) {
-            return currentLang === 'ko'
-                ? 'RG ROBOTICS와 함께 세상을 바꿀 인재를 찾고 있습니다! 채용 공고는 "Company > Careers" 메뉴를 참조해 주세요.'
-                : 'We are looking for talents to change the world! Please check the "Company > Careers" menu for open positions.';
-        }
-
-        // AS / Service
-        if (text.includes('as') || text.includes('수리') || text.includes('고장') || text.includes('repair') || text.includes('broken') || text.includes('service')) {
-            return currentLang === 'ko'
-                ? '제품 수리 및 AS 문의는 시리얼 번호와 함께 고객센터로 연락해 주세요. 전국 5개 거점 센터에서 신속히 도와드립니다.'
-                : 'For repairs and A/S, please contact our service center with your serial number. We have 5 regional centers to assist you.';
-        }
-
-        // Default
-        return currentLang === 'ko'
-            ? '죄송합니다. 해당 키워드는 아직 학습 중입니다. "제품", "가격", "위치", "문의" 등의 키워드를 입력해 보세요.'
-            : 'Sorry, I am still learning that keyword. Please try searching for "Product", "Price", "Location", or "Contact".';
+    // Price / Purchase
+    if (text.includes('가격') || text.includes('구매') || text.includes('얼마') || text.includes('price') || text.includes('buy') || text.includes('purchase')) {
+      return currentLang === 'ko'
+        ? '제품별 가격 및 구매 방법은 고객님의 용도에 따라 다를 수 있습니다. 정확한 견적은 "문의하기"를 통해 남겨주시면 상담원이 연락드리겠습니다.'
+        : 'Pricing and purchasing methods vary by product and use case. Please leave an inquiry through "Contact Us" for a formal quote.';
     }
+
+    // Location
+    if (text.includes('위치') || text.includes('주소') || text.includes('어디') || text.includes('location') || text.includes('address') || text.includes('where')) {
+      return currentLang === 'ko'
+        ? '본사는 서울특별시 구로구 경인로 445에 위치하고 있습니다. 방문 시 미리 예약 부탁드립니다.'
+        : 'Our headquarters is located at 445 Gyeongin-ro, Guro-gu, Seoul. Please make an appointment before visiting.';
+    }
+
+    // Contact / Support
+    if (text.includes('연락') || text.includes('문의') || text.includes('전화') || text.includes('번호') || text.includes('contact') || text.includes('call') || text.includes('support')) {
+      return currentLang === 'ko'
+        ? '대표번호: 010-1234-5678, 이메일: support@rg-robotics.com 입니다. 고객센터 운영 시간은 평일 09:00~18:00입니다.'
+        : 'Phone: +82 10-1234-5678, Email: support@rg-robotics.com. Business hours are weekdays 09:00~18:00 (KST).';
+    }
+
+    // Career
+    if (text.includes('채용') || text.includes('입사') || text.includes('취업') || text.includes('career') || text.includes('job') || text.includes('hiring')) {
+      return currentLang === 'ko'
+        ? 'RG ROBOTICS와 함께 세상을 바꿀 인재를 찾고 있습니다! 채용 공고는 "Company > Careers" 메뉴를 참조해 주세요.'
+        : 'We are looking for talents to change the world! Please check the "Company > Careers" menu for open positions.';
+    }
+
+    // AS / Service
+    if (text.includes('as') || text.includes('수리') || text.includes('고장') || text.includes('repair') || text.includes('broken') || text.includes('service')) {
+      return currentLang === 'ko'
+        ? '제품 수리 및 AS 문의는 시리얼 번호와 함께 고객센터로 연락해 주세요. 전국 5개 거점 센터에서 신속히 도와드립니다.'
+        : 'For repairs and A/S, please contact our service center with your serial number. We have 5 regional centers to assist you.';
+    }
+
+    // Default
+    return currentLang === 'ko'
+      ? '죄송합니다. 해당 키워드는 아직 학습 중입니다. "제품", "가격", "위치", "문의" 등의 키워드를 입력해 보세요.'
+      : 'Sorry, I am still learning that keyword. Please try searching for "Product", "Price", "Location", or "Contact".';
+  }
 });
