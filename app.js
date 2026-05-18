@@ -151,21 +151,41 @@ function initRouter() {
   // PWA Install Logic
   let deferredPrompt;
   const pwaBtn = document.getElementById('pwa-install-btn');
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.MSStream;
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+  // Show button always on mobile if not already installed as app
+  if (pwaBtn && isMobile && !isStandalone) {
+    pwaBtn.style.display = 'inline-block';
+  }
 
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    if (pwaBtn) pwaBtn.style.display = 'inline-block';
+    if (pwaBtn && !isStandalone) pwaBtn.style.display = 'inline-block';
   });
 
   if (pwaBtn) {
     pwaBtn.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`User response to install prompt: ${outcome}`);
-      deferredPrompt = null;
-      pwaBtn.style.display = 'none';
+      if (isIOS) {
+        alert(currentLang === 'ko' 
+          ? "아이폰(iOS) 설치 안내:\n브라우저 하단의 [공유(↑)] 버튼을 누른 후, [홈 화면에 추가]를 선택해주세요!" 
+          : "iOS Install Guide:\nTap the [Share(↑)] button at the bottom and select [Add to Home Screen]!");
+        return;
+      }
+
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to install prompt: ${outcome}`);
+        deferredPrompt = null;
+        pwaBtn.style.display = 'none';
+      } else {
+        alert(currentLang === 'ko'
+          ? "이 브라우저의 메뉴에서 '앱 설치' 또는 '홈 화면에 추가'를 눌러주세요!"
+          : "Please select 'Install App' or 'Add to Home Screen' from your browser menu!");
+      }
     });
   }
 }
