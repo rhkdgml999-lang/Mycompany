@@ -356,10 +356,10 @@ function handleQnASelection(id) {
 
   if (item.isSecret) {
     const pwd = prompt(currentLang === 'ko' ? "비밀번호를 입력하세요." : "Please enter the password.");
-    if (pwd) {
+    if (pwd && pwd.trim() === item.password) {
       location.hash = `#qna/view/${id}`;
     } else {
-      alert(currentLang === 'ko' ? "비밀번호가 틀렸거나 입력되지 않았습니다." : "Incorrect password.");
+      alert(currentLang === 'ko' ? "비밀번호가 틀렸거나 입력되지 않았습니다." : "Incorrect or missing password.");
     }
   } else {
     location.hash = `#qna/view/${id}`;
@@ -379,6 +379,18 @@ function renderQnADetail(id) {
         <span><strong>${t.author}</strong>: ${item.author}</span>
         <span><strong>${t.date}</strong>: ${item.date}</span>
       </div>
+      
+      <!-- Attachment Section -->
+      ${item.attachment ? `
+        <div style="margin: 20px 0; padding: 15px; background: #f0f4ff; border-radius: 8px; font-size: 0.9rem;">
+          <strong style="display: block; margin-bottom: 8px;">📎 ${currentLang === 'ko' ? '첨부파일' : 'Attachment'}</strong>
+          ${item.attachment.type.startsWith('image/') 
+            ? `<img src="${item.attachment.data}" style="max-width: 100%; border-radius: 8px; cursor: pointer;" onclick="window.open(this.src)">`
+            : `<a href="${item.attachment.data}" download="${item.attachment.name}" style="color: var(--primary-color); text-decoration: underline;">${item.attachment.name}</a>`
+          }
+        </div>
+      ` : ''}
+      
       <div style="min-height: 200px; line-height: 1.8; font-size: 1.1rem; white-space: pre-wrap; margin-bottom: 50px;">
         ${item.content ? (typeof item.content === 'object' ? item.content[currentLang] : item.content) : (currentLang === 'ko' ? '문의 내용입니다.' : 'This is the inquiry content.')}
       </div>
@@ -387,13 +399,87 @@ function renderQnADetail(id) {
         <button class="btn btn-outline" style="border-color: #ddd;" onclick="renderEditQnA('${item.id}')">${t.edit}</button>
         <button class="btn btn-outline" style="color: #ff4d4f; border-color: #ff4d4f;" onclick="handleDeleteQnA('${item.id}')">${t.delete}</button>
       </div>
+
+      <!-- Reply Section -->
+      <div style="margin-top: 60px; border-top: 1px solid #eee; padding-top: 40px;">
+        <h3 style="font-size: 1.3rem; margin-bottom: 25px;">${currentLang === 'ko' ? '답변' : 'Replies'}</h3>
+        <div id="reply-list">
+          ${(item.replies || []).map(r => `
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem;">
+                <strong style="color: var(--primary-color);">${r.author}</strong>
+                <span style="color: #999;">${r.date}</span>
+              </div>
+              <div style="line-height: 1.7; color: #444;">${r.content}</div>
+            </div>
+          `).join('')}
+          ${(!item.replies || item.replies.length === 0) ? `<p style="color: #aaa; text-align: center; padding: 30px;">${currentLang === 'ko' ? '아직 등록된 답변이 없습니다.' : 'No replies yet.'}</p>` : ''}
+        </div>
+        
+        <div style="margin-top: 40px; background: #fff; border: 1px solid #f0f0f0; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+          <h4 style="margin-bottom: 15px; font-size: 1.1rem;">${currentLang === 'ko' ? '답변 달기' : 'Add a Reply'}</h4>
+          <input type="text" id="reply-author" class="form-control" placeholder="${currentLang === 'ko' ? '이름' : 'Name'}" style="margin-bottom: 10px; max-width: 200px;">
+          <textarea id="reply-content" class="form-control" placeholder="${currentLang === 'ko' ? '내용을 입력하세요.' : 'Enter your message.'}" style="height: 100px; margin-bottom: 15px;"></textarea>
+          <button class="btn btn-primary" onclick="handleReplySubmit('${item.id}')">${currentLang === 'ko' ? '답변 등록' : 'Post Reply'}</button>
+        </div>
+      </div>
     </div>
   `;
 }
 
+window.handleReplySubmit = async (id) => {
+  const author = document.getElementById('reply-author').value;
+  const content = document.getElementById('reply-content').value;
+  if (!author || !content) {
+    alert(currentLang === 'ko' ? "이름과 내용을 입력해주세요." : "Please enter your name and content.");
+    return;
+  }
+
+  const item = (window.currentQnaList || qnaData).find(q => q.id == id);
+  if (!item) return;
+
+  const newReply = {
+    author: author,
+    content: content,
+    date: new Date().toISOString().split('T')[0]
+  };
+
+  if (!item.replies) item.replies = [];
+  item.replies.push(newReply);
+  item.status = { ko: "답변완료", en: "Answered" };
+
+  try {
+    if (window.db && window.firebaseDB && isNaN(id)) {
+      const { doc, updateDoc } = window.firebaseDB;
+      const postRef = doc(window.db, "qna", id.toString());
+      await updateDoc(postRef, {
+        replies: item.replies,
+        status: item.status
+      });
+    }
+    alert(currentLang === 'ko' ? "답변이 등록되었습니다." : "Reply posted.");
+    renderQnADetail(id);
+  } catch (err) {
+    console.error("Reply failed:", err);
+    alert(currentLang === 'ko' ? "답변 등록에 실패했습니다." : "Failed to post reply.");
+  }
+};
+
 async function handleDeleteQnA(id) {
   console.log("Attempting to delete post with id:", id);
   const t = translations[currentLang];
+  const item = (window.currentQnaList || qnaData).find(q => q.id == id);
+  if (!item) return;
+
+  // 비밀번호가 있을 경우만 확인 (기존 임시 데이터 등 보안이 필요 없는 데이터는 패스)
+  if (item.password) {
+    const enteredPwd = prompt(currentLang === 'ko' ? "글 작성 시 설정한 비밀번호를 입력해주세요." : "Please enter the password you set.");
+    if (!enteredPwd || enteredPwd.trim() !== item.password) {
+      alert(currentLang === 'ko' ? "비밀번호가 일치하지 않습니다." : "Invalid password.");
+      return;
+    }
+  }
+
   if (!confirm(currentLang === 'ko' ? "정말로 삭제하시겠습니까?" : "Are you sure you want to delete this?")) return;
 
   try {
@@ -424,6 +510,15 @@ function renderEditQnA(id) {
   const main = document.querySelector('main');
   const t = translations[currentLang];
   if (!item) return;
+
+  // 비밀번호 확인
+  if (item.password) {
+    const enteredPwd = prompt(currentLang === 'ko' ? "글 작성 시 설정한 비밀번호를 입력해주세요." : "Please enter the password you set.");
+    if (!enteredPwd || enteredPwd.trim() !== item.password) {
+      alert(currentLang === 'ko' ? "비밀번호가 일치하지 않습니다." : "Invalid password.");
+      return;
+    }
+  }
 
   main.innerHTML = `
     <div class="container" style="max-width: 600px;">
@@ -497,9 +592,14 @@ function renderWriteQnA() {
           <label for="qna-is-secret" style="cursor: pointer; font-weight: 600;">${currentLang === 'ko' ? '비밀글로 설정' : 'Set as Secret Post'}</label>
         </div>
 
-        <div id="pwd-field" class="form-group" style="display: none;">
+        <div id="pwd-field" class="form-group">
           <label class="form-label">${t.password}</label>
-          <input type="password" id="qna-pwd" class="form-control" placeholder="${currentLang === 'ko' ? '비밀번호 입력' : 'Enter password'}">
+          <input type="password" id="qna-pwd" class="form-control" required placeholder="${currentLang === 'ko' ? '비밀번호 입력' : 'Enter password'}">
+        </div>
+
+        <div class="form-group" style="margin-top: 20px;">
+          <label class="form-label">${currentLang === 'ko' ? '파일 첨부 (이미지/문서)' : 'Attach File (Image/Doc)'}</label>
+          <input type="file" id="qna-file" class="form-control" style="padding: 10px;">
         </div>
 
         <div style="display: flex; gap: 10px; margin-top: 30px;">
@@ -510,28 +610,51 @@ function renderWriteQnA() {
     </div>
   `;
 
-  // 비밀글 체크박스 토글 로직
-  const secretCheckbox = document.getElementById('qna-is-secret');
-  const pwdField = document.getElementById('pwd-field');
-  secretCheckbox.addEventListener('change', (e) => {
-    pwdField.style.display = e.target.checked ? 'block' : 'none';
-  });
-
+  // (Toggle logic removed because it is now always visible)
   document.getElementById('qna-form').addEventListener('submit', handleQnASubmit);
 }
 
 async function handleQnASubmit(e) {
   e.preventDefault();
-  const t = translations[currentLang];
   const isSecret = document.getElementById('qna-is-secret').checked;
+  const fileInput = document.getElementById('qna-file');
+  const file = fileInput.files[0];
   
+  let attachment = null;
+  if (file) {
+    // 1MB 제한 체크 (Firestore 저장 용량 고려)
+    if (file.size > 1024 * 1024) {
+      alert(currentLang === 'ko' ? "파일 크기는 1MB 이하여야 합니다." : "File size must be under 1MB.");
+      return;
+    }
+    
+    // 파일을 Base64로 변환
+    attachment = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve({
+        name: file.name,
+        type: file.type,
+        data: e.target.result
+      });
+      reader.readAsDataURL(file);
+    });
+  }
+
+  const now = new Date();
+  const dateStr = now.toISOString().split('T')[0];
+  const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+  const fullDate = `${dateStr} ${timeStr}`;
+
   const newData = {
     id: qnaData.length + 1,
     title: { ko: document.getElementById('qna-title').value, en: document.getElementById('qna-title').value },
     author: document.getElementById('qna-name').value,
-    date: new Date().toISOString().split('T')[0],
+    date: fullDate,
     status: { ko: "답변대기", en: "Pending" },
-    isSecret: isSecret
+    isSecret: isSecret,
+    password: document.getElementById('qna-pwd').value,
+    replies: [],
+    attachment: attachment
   };
 
   // 1. 로컬 데이터에 추가 (즉시 반영)
