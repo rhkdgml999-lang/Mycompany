@@ -98,6 +98,21 @@ function setLanguage(lang) {
   
   document.querySelector('.header-actions .btn-primary').textContent = t.contactUs;
   
+  // Update Chatbot UI
+  const chatHeader = document.querySelector('.chat-header h3');
+  const chatInput = document.getElementById('chat-input');
+  const chatSend = document.getElementById('chat-send');
+  const firstBotMsg = document.querySelector('#chat-messages .message.bot:first-child');
+  
+  if (chatHeader) chatHeader.textContent = lang === 'ko' ? 'RG AI Assistant' : 'RG AI Assistant'; // Title is same
+  if (chatInput) chatInput.placeholder = lang === 'ko' ? '메시지를 입력하세요...' : 'Type a message...';
+  if (chatSend) chatSend.textContent = lang === 'ko' ? '전송' : 'Send';
+  if (firstBotMsg) {
+    firstBotMsg.textContent = lang === 'ko' 
+      ? '안녕하세요! RG ROBOTICS AI 비서입니다. 무엇을 도와드릴까요?' 
+      : 'Hello! I am the RG ROBOTICS AI assistant. How can I help you?';
+  }
+  
   // Update Footer UI
   const footerDocs = document.querySelectorAll('footer h3, footer h4, footer p, footer li');
   // Simple footer update (ideally would be mapped more specifically)
@@ -757,12 +772,17 @@ function renderCareers() {
             <h1 class="section-title">${t.careers}</h1>
             <div style="max-width: 800px; margin: 0 auto;">
                 <div style="background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 40px; text-align: center;">
-                    <h2 style="margin-bottom: 20px;">RG-ROBOTICS와 함께 세상을 바꿀 동료를 찾습니다.</h2>
+                    <h2 style="margin-bottom: 20px;">
+                        ${currentLang === 'ko' ? 'RG-ROBOTICS와 함께 세상을 바꿀 동료를 찾습니다.' : 'Looking for colleagues to change the world with RG-ROBOTICS.'}
+                    </h2>
                     <p style="color: var(--text-muted); line-height: 1.8; margin-bottom: 40px;">
-                        우리는 기술로 인간의 한계를 극복하고 더 나은 미래를 만듭니다.<br>
-                        로보틱스, AI, 임베디드 등 다양한 분야의 인재를 상시 채용 중입니다.
+                        ${currentLang === 'ko' 
+                          ? '우리는 기술로 인간의 한계를 극복하고 더 나은 미래를 만듭니다.<br>로보틱스, AI, 임베디드 등 다양한 분야의 인재를 상시 채용 중입니다.' 
+                          : 'We overcome human limits through technology and create a better future.<br>Open positions in robotics, AI, embedded systems, and more.'}
                     </p>
-                    <a href="mailto:careers@rg-robotics.com" class="btn btn-primary">지원하기 (Email)</a>
+                    <a href="mailto:careers@rg-robotics.com" class="btn btn-primary">
+                        ${currentLang === 'ko' ? '지원하기 (Email)' : 'Apply Now (Email)'}
+                    </a>
                 </div>
             </div>
         </section>
