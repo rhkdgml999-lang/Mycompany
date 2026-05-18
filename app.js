@@ -134,6 +134,17 @@ function initRouter() {
   window.addEventListener('hashchange', handleRoute);
   handleRoute();
   renderFooter();
+
+  // PWA Service Worker Registration
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        console.log('Service Worker Registered!', reg);
+      }).catch(err => {
+        console.log('Service Worker registration failed: ', err);
+      });
+    });
+  }
 }
 
 async function handleRoute() {
@@ -406,6 +417,8 @@ function renderQnADetail(id) {
           <strong style="display: block; margin-bottom: 8px;">📎 ${currentLang === 'ko' ? '첨부파일' : 'Attachment'}</strong>
           ${item.attachment.type.startsWith('image/') 
             ? `<img src="${item.attachment.data}" style="max-width: 100%; border-radius: 8px; cursor: pointer;" onclick="window.open(this.src)">`
+            : item.attachment.type === 'application/pdf'
+            ? `<embed src="${item.attachment.data}" type="application/pdf" width="100%" height="500px" style="border-radius: 8px;">`
             : `<a href="${item.attachment.data}" download="${item.attachment.name}" style="color: var(--primary-color); text-decoration: underline;">${item.attachment.name}</a>`
           }
         </div>
@@ -687,6 +700,19 @@ function renderWriteQnA() {
 
 async function handleQnASubmit(e) {
   e.preventDefault();
+  const title = document.getElementById('qna-title').value;
+  const content = document.getElementById('qna-content').value;
+
+  // Spam/Profanity Filter
+  const bannedWords = ['욕설', '나쁜말', '바보', '스팸', '광고'];
+  const foundWord = bannedWords.find(word => title.includes(word) || content.includes(word));
+  if (foundWord) {
+    alert(currentLang === 'ko' 
+      ? `부적절한 단어('${foundWord}')가 포함되어 있습니다. 바른 말을 사용해주세요.` 
+      : `Inappropriate word ('${foundWord}') detected. Please use proper language.`);
+    return;
+  }
+
   const isSecret = document.getElementById('qna-is-secret').checked;
   const fileInput = document.getElementById('qna-file');
   const file = fileInput.files[0];
