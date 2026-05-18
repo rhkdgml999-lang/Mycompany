@@ -82,7 +82,7 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA6K0L3dwqfdx0gVRgkPABvgmNh84u8V_E",
@@ -96,8 +96,28 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         window.db = db;
-        window.firebaseDB = { collection, addDoc, getDocs, query, orderBy }; 
+        window.firebaseDB = { collection, addDoc, getDocs, query, orderBy, doc, deleteDoc, updateDoc }; 
     </script>
+
+    <!-- Chatbot Widget -->
+    <div id="chatbot-widget">
+        <button id="chatbot-toggle" title="Chat with AI">
+            <span class="chat-icon">💬</span>
+        </button>
+        <div id="chat-window" class="hidden">
+            <div class="chat-header">
+                <h3>RG AI Assistant</h3>
+                <button id="chat-close">✕</button>
+            </div>
+            <div id="chat-messages">
+                <div class="message bot">안녕하세요! RG ROBOTICS AI 비서입니다. 무엇을 도와드릴까요?</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="메시지를 입력하세요...">
+                <button id="chat-send">전송</button>
+            </div>
+        </div>
+    </div>
 
     <script src="data.js"></script>
     <script src="app.js"></script>

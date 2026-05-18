@@ -346,11 +346,96 @@ function renderQnADetail(id) {
       <div style="min-height: 200px; line-height: 1.8; font-size: 1.1rem; white-space: pre-wrap; margin-bottom: 50px;">
         ${item.content ? (typeof item.content === 'object' ? item.content[currentLang] : item.content) : (currentLang === 'ko' ? '문의 내용입니다.' : 'This is the inquiry content.')}
       </div>
-      <div style="text-align: center;">
+      <div style="text-align: center; display: flex; gap: 10px; justify-content: center;">
         <button class="btn btn-primary" onclick="location.hash='#qna'">${t.list}</button>
+        <button class="btn btn-outline" style="border-color: #ddd;" onclick="renderEditQnA('${item.id}')">${t.edit}</button>
+        <button class="btn btn-outline" style="color: #ff4d4f; border-color: #ff4d4f;" onclick="handleDeleteQnA('${item.id}')">${t.delete}</button>
       </div>
     </div>
   `;
+}
+
+async function handleDeleteQnA(id) {
+  const t = translations[currentLang];
+  if (!confirm(currentLang === 'ko' ? "정말로 삭제하시겠습니까?" : "Are you sure you want to delete this?")) return;
+
+  try {
+    if (window.db && window.firebaseDB) {
+      const { doc, deleteDoc } = window.firebaseDB;
+      await deleteDoc(doc(window.db, "qna", id.toString()));
+    }
+    
+    // 로컬 데이터에서도 삭제
+    const index = qnaData.findIndex(q => q.id == id);
+    if (index !== -1) qnaData.splice(index, 1);
+    
+    alert(currentLang === 'ko' ? "삭제되었습니다." : "Deleted successfully.");
+    location.hash = '#qna';
+  } catch (err) {
+    console.error("Delete failed:", err);
+    alert(currentLang === 'ko' ? "삭제에 실패했습니다." : "Failed to delete.");
+  }
+}
+
+function renderEditQnA(id) {
+  const item = (window.currentQnaList || qnaData).find(q => q.id == id);
+  const main = document.querySelector('main');
+  const t = translations[currentLang];
+  if (!item) return;
+
+  main.innerHTML = `
+    <div class="container" style="max-width: 600px;">
+      <h1 class="section-title">${t.edit}</h1>
+      <form id="edit-qna-form">
+        <div class="form-group">
+          <label class="form-label">${t.title}</label>
+          <input type="text" id="edit-qna-title" class="form-control" value="${item.title[currentLang]}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">${t.content}</label>
+          <textarea id="edit-qna-content" class="form-control" style="height: 250px;" required>${item.content ? (typeof item.content === 'object' ? item.content[currentLang] : item.content) : ''}</textarea>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 30px;">
+          <button type="submit" class="btn btn-primary" style="flex: 1;">${t.submit}</button>
+          <button type="button" class="btn btn-outline" onclick="location.hash='#qna/view/${id}'" style="flex: 1;">${t.cancel}</button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  document.getElementById('edit-qna-form').addEventListener('submit', (e) => handleEditQnASubmit(e, id));
+}
+
+async function handleEditQnASubmit(e, id) {
+  e.preventDefault();
+  const t = translations[currentLang];
+  const newTitle = document.getElementById('edit-qna-title').value;
+  const newContent = document.getElementById('edit-qna-content').value;
+
+  try {
+    if (window.db && window.firebaseDB) {
+      const { doc, updateDoc } = window.firebaseDB;
+      const dataToUpdate = {
+        title: { ko: newTitle, en: newTitle },
+        content: newContent,
+        updatedAt: new Date()
+      };
+      await updateDoc(doc(window.db, "qna", id.toString()), dataToUpdate);
+    }
+    
+    // 로컬 데이터 업데이트
+    const item = qnaData.find(q => q.id == id);
+    if (item) {
+      item.title = { ko: newTitle, en: newTitle };
+      item.content = newContent;
+    }
+
+    alert(currentLang === 'ko' ? "수정되었습니다." : "Updated successfully.");
+    location.hash = `#qna/view/${id}`;
+  } catch (err) {
+    console.error("Update failed:", err);
+    alert(currentLang === 'ko' ? "수정 중 오류가 발생했습니다." : "Update failed.");
+  }
 }
 
 function renderWriteQnA() {
@@ -514,3 +599,111 @@ function renderFooter() {
     </div>
   `;
 }
+
+/* Chatbot Logic */
+document.addEventListener('DOMContentLoaded', () => {
+    const chatToggle = document.getElementById('chatbot-toggle');
+    const chatClose = document.getElementById('chat-close');
+    const chatWindow = document.getElementById('chat-window');
+    const chatInput = document.getElementById('chat-input');
+    const chatSend = document.getElementById('chat-send');
+    const chatMessages = document.getElementById('chat-messages');
+
+    if (chatToggle && chatWindow) {
+        chatToggle.addEventListener('click', () => {
+            chatWindow.classList.toggle('hidden');
+            if (!chatWindow.classList.contains('hidden')) {
+                chatInput.focus();
+            }
+        });
+
+        chatClose.addEventListener('click', () => {
+            chatWindow.classList.add('hidden');
+        });
+
+        const sendMessage = () => {
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            addMessage(text, 'user');
+            chatInput.value = '';
+
+            // Keyword based response logic
+            setTimeout(() => {
+                const response = getBotResponse(text);
+                addMessage(response, 'bot');
+            }, 600);
+        };
+
+        chatSend.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    }
+
+    function addMessage(text, sender) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${sender}`;
+        msgDiv.textContent = text;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function getBotResponse(input) {
+        const text = input.toLowerCase();
+        
+        // Greeting
+        if (text.includes('안녕') || text.includes('반가워') || text.includes('hello') || text.includes('hi')) {
+            return currentLang === 'ko' 
+                ? '안녕하세요! RG ROBOTICS AI 비서입니다. 무엇을 도와드릴까요?' 
+                : 'Hello! I am the RG ROBOTICS AI assistant. How can I help you?';
+        }
+        
+        // Products
+        if (text.includes('제품') || text.includes('로봇') || text.includes('웨어러블') || text.includes('product') || text.includes('robot')) {
+            return currentLang === 'ko'
+                ? 'RG ROBOTICS는 Medica(의료), Industrial(산업), Core(구동모듈) 라인업을 보유하고 있습니다. 자세한 내용은 "제품" 메뉴를 확인해 보세요.'
+                : 'RG ROBOTICS offers Medica (Medical), Industrial (Power Assist), and Core (Drive Module) lineups. Please check the "Products" menu for details.';
+        }
+        
+        // Price / Purchase
+        if (text.includes('가격') || text.includes('구매') || text.includes('얼마') || text.includes('price') || text.includes('buy') || text.includes('purchase')) {
+            return currentLang === 'ko'
+                ? '제품별 가격 및 구매 방법은 고객님의 용도에 따라 다를 수 있습니다. 정확한 견적은 "문의하기"를 통해 남겨주시면 상담원이 연락드리겠습니다.'
+                : 'Pricing and purchasing methods vary by product and use case. Please leave an inquiry through "Contact Us" for a formal quote.';
+        }
+
+        // Location
+        if (text.includes('위치') || text.includes('주소') || text.includes('어디') || text.includes('location') || text.includes('address') || text.includes('where')) {
+            return currentLang === 'ko'
+                ? '본사는 서울특별시 구로구 경인로 445에 위치하고 있습니다. 방문 시 미리 예약 부탁드립니다.'
+                : 'Our headquarters is located at 445 Gyeongin-ro, Guro-gu, Seoul. Please make an appointment before visiting.';
+        }
+        
+        // Contact / Support
+        if (text.includes('연락') || text.includes('문의') || text.includes('전화') || text.includes('번호') || text.includes('contact') || text.includes('call') || text.includes('support')) {
+            return currentLang === 'ko'
+                ? '대표번호: 010-1234-5678, 이메일: support@rg-robotics.com 입니다. 고객센터 운영 시간은 평일 09:00~18:00입니다.'
+                : 'Phone: +82 10-1234-5678, Email: support@rg-robotics.com. Business hours are weekdays 09:00~18:00 (KST).';
+        }
+        
+        // Career
+        if (text.includes('채용') || text.includes('입사') || text.includes('취업') || text.includes('career') || text.includes('job') || text.includes('hiring')) {
+            return currentLang === 'ko'
+                ? 'RG ROBOTICS와 함께 세상을 바꿀 인재를 찾고 있습니다! 채용 공고는 "Company > Careers" 메뉴를 참조해 주세요.'
+                : 'We are looking for talents to change the world! Please check the "Company > Careers" menu for open positions.';
+        }
+
+        // AS / Service
+        if (text.includes('as') || text.includes('수리') || text.includes('고장') || text.includes('repair') || text.includes('broken') || text.includes('service')) {
+            return currentLang === 'ko'
+                ? '제품 수리 및 AS 문의는 시리얼 번호와 함께 고객센터로 연락해 주세요. 전국 5개 거점 센터에서 신속히 도와드립니다.'
+                : 'For repairs and A/S, please contact our service center with your serial number. We have 5 regional centers to assist you.';
+        }
+
+        // Default
+        return currentLang === 'ko'
+            ? '죄송합니다. 해당 키워드는 아직 학습 중입니다. "제품", "가격", "위치", "문의" 등의 키워드를 입력해 보세요.'
+            : 'Sorry, I am still learning that keyword. Please try searching for "Product", "Price", "Location", or "Contact".';
+    }
+});

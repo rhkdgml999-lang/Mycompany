@@ -37,7 +37,9 @@ const translations = {
     careers: "채용정보",
     contact: "연락처",
     faq: "자주 묻는 질문",
-    serviceCenter: "서비스 센터"
+    serviceCenter: "서비스 센터",
+    edit: "수정",
+    delete: "삭제"
   },
   en: {
     home: "Home",
@@ -77,7 +79,9 @@ const translations = {
     careers: "Careers",
     contact: "Contact",
     faq: "FAQ",
-    serviceCenter: "Service Center"
+    serviceCenter: "Service Center",
+    edit: "Edit",
+    delete: "Delete"
   }
 };
 
