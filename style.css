@@ -482,7 +482,12 @@ h1, h2, h3, h4 {
 
   .mobile-menu-btn {
     display: block;
-    order: 3;
+    order: 4; /* Move to the far right */
+  }
+
+  #theme-toggle {
+    order: 3; /* Stay next to the hamburger */
+    margin-right: 15px;
   }
 
   #main-nav {
