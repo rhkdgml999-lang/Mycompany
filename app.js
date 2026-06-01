@@ -1,10 +1,37 @@
 let currentLang = 'ko';
 
 document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
   initLanguageSwitcher();
   setLanguage('ko'); // Ensure initial UI is synced to Korean
   initRouter();
+  initScrollReveal();
 });
+
+function initTheme() {
+  const toggle = document.getElementById('theme-toggle');
+  const currentTheme = localStorage.getItem('theme') || 'light';
+  
+  if (currentTheme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    if (toggle) toggle.textContent = '☀️';
+  }
+
+  if (toggle) {
+    toggle.addEventListener('click', () => {
+      let theme = document.documentElement.getAttribute('data-theme');
+      if (theme === 'dark') {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'light');
+        toggle.textContent = '🌙';
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+        toggle.textContent = '☀️';
+      }
+    });
+  }
+}
 
 function initLanguageSwitcher() {
   const langBtns = document.querySelectorAll('.lang-btn');
@@ -190,6 +217,36 @@ function initRouter() {
   }
 }
 
+function initScrollReveal() {
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: "0px 0px -50px 0px"
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+        // Once revealed, we can stop observing
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // Use MutationObserver to re-bind when content changes
+  const main = document.querySelector('main');
+  const observeElements = () => {
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  };
+
+  // Initial bind
+  observeElements();
+
+  // Watch for dynamic content changes
+  const mutationObserver = new MutationObserver(observeElements);
+  mutationObserver.observe(main, { childList: true, subtree: true });
+}
+
 async function handleRoute() {
   const hash = location.hash || '#home';
 
@@ -255,9 +312,9 @@ function renderHome() {
 
   main.innerHTML = `
     <section class="hero">
-      <img src="hero.png" class="hero-bg" alt="Hero Image">
+      <img src="hero.png" class="hero-bg" alt="Hero Image" loading="lazy">
       <div class="hero-overlay"></div>
-      <div class="hero-content">
+      <div class="hero-content reveal">
         <h1>${t.heroTitle}</h1>
         <p>${t.heroDesc}</p>
         <div class="hero-btns">
@@ -268,10 +325,10 @@ function renderHome() {
     </section>
 
     <section class="container">
-      <h2 class="section-title">${t.latestNews}</h2>
+      <h2 class="section-title reveal">${t.latestNews}</h2>
       <div class="news-grid">
         ${latestNews.map(item => `
-          <div class="news-card" onclick="location.hash='#news/${item.id}'" style="cursor: pointer;">
+          <div class="news-card reveal" onclick="location.hash='#news/${item.id}'" style="cursor: pointer;">
             <img src="${item.image}" class="news-image" alt="${item.title[currentLang]}" onerror="this.src='https://images.unsplash.com/photo-1485083269755-a7b559a4fe5e?auto=format&fit=crop&q=80&w=1000'">
             <div class="news-content">
               <span class="news-category">${item.category[currentLang]}</span>
@@ -288,7 +345,7 @@ function renderHome() {
   `;
 }
 
-function renderNews(filter = 'all') {
+function renderNews(filter = 'all', searchQuery = '') {
   const main = document.querySelector('main');
   const t = translations[currentLang];
 
@@ -299,37 +356,70 @@ function renderNews(filter = 'all') {
     'blog': currentLang === 'ko' ? '블로그' : 'Blog'
   };
 
-  const filteredData = filter === 'all'
+  let filteredData = filter === 'all'
     ? newsData
     : newsData.filter(item => {
       const cat = item.category[currentLang];
-      return cat === filterMap[filter] || cat === filter; // Support both cases
+      return cat === filterMap[filter] || cat === filter;
     });
+
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filteredData = filteredData.filter(item => 
+      item.title[currentLang].toLowerCase().includes(q) || 
+      item.content[currentLang].toLowerCase().includes(q)
+    );
+  }
 
   main.innerHTML = `
     <section class="container">
       <h1 class="section-title">${t.news}</h1>
+      
+      <div style="max-width: 600px; margin: 0 auto 40px; display: flex; gap: 10px; position: relative;">
+        <input type="text" id="news-search" class="form-control" placeholder="${currentLang === 'ko' ? '검색어를 입력하세요...' : 'Search news...'}" value="${searchQuery}" style="padding-right: 50px;">
+        <button class="btn btn-primary" onclick="handleNewsSearch()" style="position: absolute; right: 5px; top: 5px; bottom: 5px; padding: 0 15px; border-radius: 4px;">🔍</button>
+      </div>
+
       <div class="tabs">
         <div class="tab ${filter === 'all' ? 'active' : ''}" onclick="renderNews('all')">${currentLang === 'ko' ? '전체' : 'All'}</div>
         <div class="tab ${filter === 'notice' ? 'active' : ''}" onclick="renderNews('notice')">${t.newsNotice}</div>
         <div class="tab ${filter === 'press' ? 'active' : ''}" onclick="renderNews('press')">${t.newsPress}</div>
         <div class="tab ${filter === 'blog' ? 'active' : ''}" onclick="renderNews('blog')">${t.newsBlog}</div>
       </div>
-      <div class="news-grid">
-        ${filteredData.map(item => `
-          <div class="news-card" onclick="location.hash='#news/${item.id}'" style="cursor: pointer;">
-            <img src="${item.image}" class="news-image" alt="${item.title[currentLang]}" onerror="this.src='https://images.unsplash.com/photo-1485083269755-a7b559a4fe5e?auto=format&fit=crop&q=80&w=1000'">
-            <div class="news-content">
-              <span class="news-category">${item.category[currentLang]}</span>
-              <h3 class="news-title">${item.title[currentLang]}</h3>
-              <p class="news-date">${item.date} | ${currentLang === 'ko' ? '조회' : 'Views'} ${item.views}</p>
+      
+      ${filteredData.length > 0 ? `
+        <div class="news-grid">
+          ${filteredData.map(item => `
+            <div class="news-card reveal" onclick="location.hash='#news/${item.id}'" style="cursor: pointer;">
+              <img src="${item.image}" class="news-image" alt="${item.title[currentLang]}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1485083269755-a7b559a4fe5e?auto=format&fit=crop&q=80&w=1000'">
+              <div class="news-content">
+                <span class="news-category">${item.category[currentLang]}</span>
+                <h3 class="news-title">${item.title[currentLang]}</h3>
+                <p class="news-date">${item.date} | ${currentLang === 'ko' ? '조회' : 'Views'} ${item.views}</p>
+              </div>
             </div>
-          </div>
-        `).join('')}
-      </div>
+          `).join('')}
+        </div>
+      ` : `
+        <div style="text-align: center; padding: 100px 0; color: var(--text-muted);">
+          ${currentLang === 'ko' ? '검색 결과가 없습니다.' : 'No results found.'}
+        </div>
+      `}
     </section>
   `;
+
+  // Bind Enter key
+  document.getElementById('news-search')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') handleNewsSearch();
+  });
 }
+
+window.handleNewsSearch = () => {
+  const query = document.getElementById('news-search').value;
+  // Keep the current category filter if possible, or just search all
+  // For simplicity, we'll search within the current view
+  renderNews('all', query);
+};
 
 function renderNewsDetail(id) {
   const currentIndex = newsData.findIndex(n => n.id === id);
@@ -352,7 +442,7 @@ function renderNewsDetail(id) {
       </div>
 
       <img src="${item.image}" 
-           style="width: 100%; border-radius: 12px; margin-bottom: 40px; background: #eee; min-height: 300px; object-fit: cover;" 
+           style="width: 100%; border-radius: 12px; margin-bottom: 40px; background: var(--section-bg); min-height: 300px; object-fit: cover;" 
            onerror="this.src='https://images.unsplash.com/photo-1591115765373-520b7a21769b?auto=format&fit=crop&q=80&w=1000'">
       
       <div style="font-size: 1.1rem; line-height: 1.8; white-space: pre-wrap; margin-bottom: 80px;">${item.content[currentLang]}</div>
@@ -368,7 +458,7 @@ function renderNewsDetail(id) {
   `;
 }
 
-async function renderQnA() {
+async function renderQnA(searchQuery = '') {
   const main = document.querySelector('main');
   const t = translations[currentLang];
 
@@ -384,8 +474,6 @@ async function renderQnA() {
         id: doc.id
       }));
 
-      // Firebase 데이터가 있으면 기존 정적 데이터와 합침 (중복 방지는 id 등으로 체크 가능)
-      // 여기서는 Firebase 데이터를 우선적으로 표시
       if (firebasePosts.length > 0) {
         displayData = [...firebasePosts];
       }
@@ -394,10 +482,25 @@ async function renderQnA() {
     console.error("Failed to sync with Firebase:", err);
   }
 
+  // 필터링 적용
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    displayData = displayData.filter(item => 
+      (item.title[currentLang] || "").toLowerCase().includes(q) || 
+      (item.author || "").toLowerCase().includes(q)
+    );
+  }
+
   main.innerHTML = `
-    <section class="container">
+    <section class="container reveal">
       <h1 class="section-title">${t.qnaTitle}</h1>
       <p style="text-align: center; margin-bottom: 40px; color: var(--text-muted);">${t.qnaDesc}</p>
+      
+      <div style="max-width: 600px; margin: 0 auto 40px; display: flex; gap: 10px; position: relative;">
+        <input type="text" id="qna-search" class="form-control" placeholder="${currentLang === 'ko' ? '제목 또는 작성자 검색...' : 'Search title or author...'}" value="${searchQuery}" style="padding-right: 50px;">
+        <button class="btn btn-primary" onclick="handleQnASearch()" style="position: absolute; right: 5px; top: 5px; bottom: 5px; padding: 0 15px; border-radius: 4px;">🔍</button>
+      </div>
+
       <div style="text-align: right; margin-bottom: 20px;">
         <a href="#qna/write" class="btn btn-primary">${t.write}</a>
       </div>
@@ -412,7 +515,7 @@ async function renderQnA() {
           </tr>
         </thead>
         <tbody>
-          ${displayData.map(item => `
+          ${displayData.length > 0 ? displayData.map(item => `
             <tr onclick="handleQnASelection('${item.id}')" style="cursor: pointer;">
               <td>${item.id.toString().substring(0, 4)}</td>
               <td>${item.isSecret ? '<span class="icon-lock">🔒</span> ' + t.secretPost : item.title[currentLang]}</td>
@@ -420,15 +523,24 @@ async function renderQnA() {
               <td>${item.date}</td>
               <td style="color: var(--primary-color); font-weight: 600;">${item.status[currentLang]}</td>
             </tr>
-          `).join('')}
+          `).join('') : `<tr><td colspan="5" style="text-align: center; padding: 50px;">${currentLang === 'ko' ? '검색 결과가 없습니다.' : 'No results found.'}</td></tr>`}
         </tbody>
       </table>
     </section>
   `;
 
-  // 전역 데이터 업데이트 (상세 보기를 위해)
   window.currentQnaList = displayData;
+
+  // Bind Enter key
+  document.getElementById('qna-search')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') handleQnASearch();
+  });
 }
+
+window.handleQnASearch = () => {
+  const query = document.getElementById('qna-search').value;
+  renderQnA(query);
+};
 
 function handleQnASelection(id) {
   const item = (window.currentQnaList || qnaData).find(q => q.id == id);
@@ -455,14 +567,14 @@ function renderQnADetail(id) {
   main.innerHTML = `
     <div class="container" style="max-width: 800px;">
       <h1 class="section-title">${item.isSecret ? '🔒 ' : ''}${item.title[currentLang]}</h1>
-      <div style="display: flex; justify-content: space-between; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color);">
         <span><strong>${t.author}</strong>: ${item.author}</span>
         <span><strong>${t.date}</strong>: ${item.date}</span>
       </div>
       
       <!-- Attachment Section -->
       ${item.attachment ? `
-        <div style="margin: 20px 0; padding: 15px; background: #f0f4ff; border-radius: 8px; font-size: 0.9rem;">
+        <div style="margin: 20px 0; padding: 15px; background: var(--section-bg); border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.9rem;">
           <strong style="display: block; margin-bottom: 8px;">📎 ${currentLang === 'ko' ? '첨부파일' : 'Attachment'}</strong>
           ${item.attachment.type.startsWith('image/')
         ? `<img src="${item.attachment.data}" style="max-width: 100%; border-radius: 8px; cursor: pointer;" onclick="window.open(this.src)">`
@@ -483,22 +595,22 @@ function renderQnADetail(id) {
       </div>
 
       <!-- Reply Section -->
-      <div style="margin-top: 60px; border-top: 1px solid #eee; padding-top: 40px;">
+      <div style="margin-top: 60px; border-top: 1px solid var(--border-color); padding-top: 40px;">
         <h3 style="font-size: 1.3rem; margin-bottom: 25px;">${currentLang === 'ko' ? '답변' : 'Replies'}</h3>
         <div id="reply-list">
           ${(item.replies || []).map(r => `
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+            <div style="background: var(--section-bg); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
               <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem;">
                 <strong style="color: var(--primary-color);">${r.author}</strong>
-                <span style="color: #999;">${r.date}</span>
+                <span style="color: var(--text-muted);">${r.date}</span>
               </div>
-              <div style="line-height: 1.7; color: #444;">${r.content}</div>
+              <div style="line-height: 1.7; color: var(--text-color);">${r.content}</div>
             </div>
           `).join('')}
           ${(!item.replies || item.replies.length === 0) ? `<p style="color: #aaa; text-align: center; padding: 30px;">${currentLang === 'ko' ? '아직 등록된 답변이 없습니다.' : 'No replies yet.'}</p>` : ''}
         </div>
         
-        <div style="margin-top: 40px; background: #fff; border: 1px solid #f0f0f0; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+        <div style="margin-top: 40px; background: var(--bg-color); border: 1px solid var(--border-color); padding: 25px; border-radius: 15px; box-shadow: var(--card-shadow);">
           <h4 style="margin-bottom: 15px; font-size: 1.1rem;">${currentLang === 'ko' ? '답변 달기' : 'Add a Reply'}</h4>
           <input type="text" id="reply-author" class="form-control" placeholder="${currentLang === 'ko' ? '이름' : 'Name'}" style="margin-bottom: 10px; max-width: 200px;">
           <textarea id="reply-content" class="form-control" placeholder="${currentLang === 'ko' ? '내용을 입력하세요.' : 'Enter your message.'}" style="height: 100px; margin-bottom: 15px;"></textarea>
@@ -847,7 +959,7 @@ function renderProducts() {
       </p>
       
       <div class="news-grid">
-        <div class="news-card">
+        <div class="news-card reveal">
           <img src="prod_medical.png" class="news-image">
           <div class="news-content">
             <h3 class="news-title">${currentLang === 'ko' ? 'RG Medica (의료용 재활 로봇)' : 'RG Medica (Medical Rehab Robot)'}</h3>
@@ -859,7 +971,7 @@ function renderProducts() {
           </div>
         </div>
         
-        <div class="news-card">
+        <div class="news-card reveal">
           <img src="prod_industrial.png" class="news-image">
           <div class="news-content">
             <h3 class="news-title">${currentLang === 'ko' ? 'RG Industrial (산업용 근력 보조)' : 'RG Industrial (Industrial Power Assist)'}</h3>
@@ -897,11 +1009,11 @@ function renderSupport(sub) {
       <section class="container">
         <h1 class="section-title">${t.supportFAQ}</h1>
         <div style="max-width: 800px; margin: 0 auto;">
-          <div style="background: #fdfdfd; border: 1px solid #eee; border-radius: 12px; padding: 30px; margin-bottom: 20px;">
+          <div style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 30px; margin-bottom: 20px;">
             <p style="font-weight: 700; font-size: 1.1rem; margin-bottom: 10px;">Q: ${currentLang === 'ko' ? '제품 구매는 어떻게 하나요?' : 'How can I purchase the products?'}</p>
             <p style="color: var(--text-muted);">${currentLang === 'ko' ? 'A: 상단의 "문의하기" 또는 고객센터(010-1234-5678)를 통해 상담 받으실 수 있습니다.' : 'A: You can get a consultation through "Contact Us" or our service center (+82 10-1234-5678).'}</p>
           </div>
-          <div style="background: #fdfdfd; border: 1px solid #eee; border-radius: 12px; padding: 30px; margin-bottom: 20px;">
+          <div style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 30px; margin-bottom: 20px;">
             <p style="font-weight: 700; font-size: 1.1rem; margin-bottom: 10px;">Q: ${currentLang === 'ko' ? '배송 기간은 얼마나 걸리나요?' : 'How long does delivery take?'}</p>
             <p style="color: var(--text-muted);">${currentLang === 'ko' ? 'A: 주문 제작 방식에 따라 통상 2~4주 정도 소요됩니다.' : 'A: It usually takes 2-4 weeks depending on the custom production process.'}</p>
           </div>
@@ -915,11 +1027,11 @@ function renderSupport(sub) {
         <div style="text-align: center; max-width: 800px; margin: 0 auto;">
           <p style="font-size: 1.2rem; margin-bottom: 40px; color: var(--text-muted);">${currentLang === 'ko' ? '전국 5개 거점 센터에서 전문 엔지니어가 신속하게 도와드립니다.' : 'Expert engineers help you quickly at 5 regional centers nationwide.'}</p>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-            <div style="padding: 20px; background: #f8f9fa; border-radius: 8px;">
+            <div style="padding: 20px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px;">
               <h4 style="margin-bottom: 10px;">${currentLang === 'ko' ? '서울/수도권 센터' : 'Seoul Center'}</h4>
               <p>010-1234-5678</p>
             </div>
-            <div style="padding: 20px; background: #f8f9fa; border-radius: 8px;">
+            <div style="padding: 20px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px;">
               <h4 style="margin-bottom: 10px;">${currentLang === 'ko' ? '부산/영남 센터' : 'Busan Center'}</h4>
               <p>051-123-4567</p>
             </div>
@@ -1004,7 +1116,7 @@ function renderCompany() {
         <section class="container">
             <h1 class="section-title">${t.company}</h1>
             <div style="max-width: 900px; margin: 0 auto;">
-                <div style="margin-bottom: 60px; line-height: 2; font-size: 1.1rem; color: #444;">
+            <div style="margin-bottom: 60px; line-height: 2; font-size: 1.1rem; color: var(--text-color);">
                     <h2 style="font-size: 2rem; color: var(--primary-color); margin-bottom: 25px;">
                         ${currentLang === 'ko' ? '인간과 기술의 따뜻한 공존, RG ROBOTICS' : 'Warm Coexistence of Human and Technology, RG ROBOTICS'}
                     </h2>
@@ -1021,17 +1133,17 @@ function renderCompany() {
                 </div>
                 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
-                    <div style="padding: 40px; background: #f8f9fa; border-radius: 15px; text-align: center;">
+                    <div class="reveal" style="padding: 40px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 15px; text-align: center;">
                         <h3 style="margin-bottom: 15px;">Vision</h3>
                         <p style="color: var(--text-muted);">${currentLang === 'ko' ? '로보틱스로 인류의 활동 범위를 무한히 확장합니다.' : 'Infinitely expanding the scope of human activity with robotics.'}</p>
                     </div>
-                    <div style="padding: 40px; background: #f8f9fa; border-radius: 15px; text-align: center;">
+                    <div class="reveal" style="padding: 40px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 15px; text-align: center;">
                         <h3 style="margin-bottom: 15px;">Mission</h3>
                         <p style="color: var(--text-muted);">${currentLang === 'ko' ? '모든 사람이 제약 없이 움직이는 세상을 만듭니다.' : 'Creating a world where everyone moves without constraints.'}</p>
                     </div>
                 </div>
 
-                <div style="margin-top: 60px; text-align: center; padding: 40px; border: 1px solid #eee; border-radius: 12px;">
+                <div style="margin-top: 60px; text-align: center; padding: 40px; border: 1px solid var(--border-color); border-radius: 12px;">
                     <h3 style="margin-bottom: 20px;">${t.careers}</h3>
                     <p style="margin-bottom: 25px; color: var(--text-muted);">${currentLang === 'ko' ? 'RG ROBOTICS의 미래를 함께 만들어갈 동료를 찾습니다.' : 'We are looking for colleagues to build the future of RG ROBOTICS together.'}</p>
                     <a href="#careers" class="btn btn-outline" style="border-color: var(--primary-color); color: var(--primary-color);">${currentLang === 'ko' ? '채용공고 확인하기' : 'View Job Openings'}</a>
@@ -1048,7 +1160,7 @@ function renderCareers() {
         <section class="container">
             <h1 class="section-title">${t.careers}</h1>
             <div style="max-width: 800px; margin: 0 auto;">
-                <div style="background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 40px; text-align: center;">
+                <div style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 40px; text-align: center;">
                     <h2 style="margin-bottom: 20px;">
                         ${currentLang === 'ko' ? 'RG-ROBOTICS와 함께 세상을 바꿀 동료를 찾습니다.' : 'Looking for colleagues to change the world with RG-ROBOTICS.'}
                     </h2>
