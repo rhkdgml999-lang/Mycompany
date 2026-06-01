@@ -98,9 +98,9 @@ const newsData = [
     id: 1,
     category: { ko: "공지", en: "Notice" },
     title: { ko: "[공지] 2026년 정기 주주총회 소집 안내", en: "[Notice] 2026 Annual Shareholders Meeting" },
-    content: { 
-      ko: "RG-ROBOTICS의 2026년 정기 주주총회 소집 및 진행 방식에 대해 안내드립니다. 당사는 이번 주주총회를 통해 미래 성장을 위한 핵심 전략을 공유하고자 합니다.", 
-      en: "Information on the 2026 Annual General Meeting of Shareholders of RG-ROBOTICS. We plan to share key strategies for future growth." 
+    content: {
+      ko: "RG-ROBOTICS의 2026년 정기 주주총회 소집 및 진행 방식에 대해 안내드립니다. 당사는 이번 주주총회를 통해 미래 성장을 위한 핵심 전략을 공유하고자 합니다.",
+      en: "Information on the 2026 Annual General Meeting of Shareholders of RG-ROBOTICS. We plan to share key strategies for future growth."
     },
     date: "2026-05-10",
     views: 1250,
@@ -110,9 +110,9 @@ const newsData = [
     id: 2,
     category: { ko: "뉴스", en: "Press" },
     title: { ko: "RG-ROBOTICS, 초정밀 웨어러블 센서 기술 특허 취득", en: "RG-ROBOTICS Acquires Patent for High-Precision Wearable Sensors" },
-    content: { 
-      ko: "당사의 연구진이 개발한 차세대 웨어러블 로봇용 센서 기술이 국내외 특허를 취득했습니다. 이 기술은 착용자의 의도를 더욱 정밀하게 파악하여 자연스러운 보행을 돕습니다.", 
-      en: "Our researchers have successfully patented next-gen sensor technology for wearable robots. This technology helps natural walking by precisely grasping the wearer's intention." 
+    content: {
+      ko: "당사의 연구진이 개발한 차세대 웨어러블 로봇용 센서 기술이 국내외 특허를 취득했습니다. 이 기술은 착용자의 의도를 더욱 정밀하게 파악하여 자연스러운 보행을 돕습니다.",
+      en: "Our researchers have successfully patented next-gen sensor technology for wearable robots. This technology helps natural walking by precisely grasping the wearer's intention."
     },
     date: "2026-05-08",
     views: 3420,
@@ -122,9 +122,9 @@ const newsData = [
     id: 3,
     category: { ko: "블로그", en: "Blog" },
     title: { ko: "웨어러블 로봇이 바꾸는 일상의 변화: 'RG 슈트' 개발 비하인드", en: "How Wearable Robots are Changing Daily Life: Behind the 'RG Suit'" },
-    content: { 
-      ko: "일상 생활에서 도움을 줄 수 있는 보조 로봇 'RG 슈트'의 개발 과정과 엔지니어들의 치열한 고민을 담았습니다. 더 가볍고, 더 똑똑한 로봇을 향한 여정입니다.", 
-      en: "This post covers the development process of 'RG Suit' and the intense deliberations of engineers. It's a journey towards lighter and smarter robots." 
+    content: {
+      ko: "일상 생활에서 도움을 줄 수 있는 보조 로봇 'RG 슈트'의 개발 과정과 엔지니어들의 치열한 고민을 담았습니다. 더 가볍고, 더 똑똑한 로봇을 향한 여정입니다.",
+      en: "This post covers the development process of 'RG Suit' and the intense deliberations of engineers. It's a journey towards lighter and smarter robots."
     },
     date: "2026-05-05",
     views: 890,
@@ -134,9 +134,9 @@ const newsData = [
     id: 4,
     category: { ko: "공지", en: "Notice" },
     title: { ko: "신규 서비스 센터 전국 확대 운영 안내", en: "Notice on Nationwide Expansion of New Service Centers" },
-    content: { 
-      ko: "고객 여러분의 편의를 위해 수도권 위주로 운영되던 서비스 센터를 전국 5개 거점 도시로 확대 운영하게 되었습니다.", 
-      en: "Service centers that were operated mainly in the metropolitan area will be expanded to 5 major base cities nationwide for customer convenience." 
+    content: {
+      ko: "고객 여러분의 편의를 위해 수도권 위주로 운영되던 서비스 센터를 전국 5개 거점 도시로 확대 운영하게 되었습니다.",
+      en: "Service centers that were operated mainly in the metropolitan area will be expanded to 5 major base cities nationwide for customer convenience."
     },
     date: "2026-04-15",
     views: 740,
