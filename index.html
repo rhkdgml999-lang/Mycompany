@@ -130,6 +130,41 @@
         window.firebaseDB = { collection, addDoc, getDocs, query, orderBy, doc, deleteDoc, updateDoc }; 
     </script>
 
+    <!-- Modals Section -->
+    <div id="product-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-container">
+            <button class="modal-close">✕</button>
+            <div id="product-modal-content"></div>
+        </div>
+    </div>
+
+    <div id="contact-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-container" style="max-width: 500px;">
+            <button class="modal-close">✕</button>
+            <div class="contact-modal-body">
+                <h2 id="contact-modal-title">문의하기</h2>
+                <p style="margin-bottom: 25px; color: var(--text-muted); font-size: 0.9rem;">궁금하신 점을 남겨주시면 담당자가 확인 후 연락드리겠습니다.</p>
+                <form id="contact-form">
+                    <div class="form-group">
+                        <label class="form-label">성함</label>
+                        <input type="text" id="contact-name" class="form-control" placeholder="이름을 입력하세요" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">이메일</label>
+                        <input type="email" id="contact-email" class="form-control" placeholder="example@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">문의 내용</label>
+                        <textarea id="contact-message" class="form-control" style="height: 120px;" placeholder="문의하실 내용을 입력하세요" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">전송하기</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Chatbot Widget -->
     <div id="chatbot-widget">
         <button id="chatbot-toggle" title="Chat with AI">
@@ -137,11 +172,17 @@
         </button>
         <div id="chat-window" class="hidden">
             <div class="chat-header">
-                <h3>RG AI Assistant</h3>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="bot-avatar-small">RG</div>
+                    <h3>RG AI Assistant</h3>
+                </div>
                 <button id="chat-close">✕</button>
             </div>
             <div id="chat-messages">
                 <div class="message bot">안녕하세요! RG ROBOTICS AI 비서입니다. 무엇을 도와드릴까요?</div>
+                <div class="chat-quick-btns" id="chat-quick-btns">
+                    <!-- Buttons will be injected by JS -->
+                </div>
             </div>
             <div class="chat-input-area">
                 <input type="text" id="chat-input" placeholder="메시지를 입력하세요...">

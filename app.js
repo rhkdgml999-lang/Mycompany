@@ -949,6 +949,48 @@ async function handleQnASubmit(e) {
 function renderProducts() {
   const main = document.querySelector('main');
   const t = translations[currentLang];
+  const products = [
+    {
+      id: 'medical',
+      img: 'prod_medical.png',
+      title: { ko: 'RG Medica (의료용 재활 로봇)', en: 'RG Medica (Medical Rehab Robot)' },
+      desc: { 
+        ko: '보행 재활이 필요한 환자를 위한 인공지능 기반 웨어러블 로봇입니다. 환자의 보행 패턴을 분석하여 최적의 보조력을 제공합니다.',
+        en: 'AI-based wearable robot for patients in need of gait rehabilitation. Analyzes gait patterns to provide optimal assistance.'
+      },
+      specs: {
+        ko: [['무게', '2.5kg'], ['사용시간', '4시간'], ['소재', '탄소 섬유'], ['기능', 'AI 보행분석']],
+        en: [['Weight', '2.5kg'], ['Duration', '4 hours'], ['Material', 'Carbon Fiber'], ['Feature', 'AI Gait Analysis']]
+      }
+    },
+    {
+      id: 'industrial',
+      img: 'prod_industrial.png',
+      title: { ko: 'RG Industrial (산업용 근력 보조)', en: 'RG Industrial (Industrial Power Assist)' },
+      desc: {
+        ko: '물류 및 제조 현장에서 작업자의 근력을 보조하여 부상을 방지하고 효율을 극대화합니다. 고강도 탄소 섬유 소재로 내구성이 뛰어납니다.',
+        en: 'Assists workers in logistics and manufacturing to prevent injuries and maximize efficiency. High durability with carbon fiber.'
+      },
+      specs: {
+        ko: [['무게', '3.8kg'], ['최대지지', '30kg'], ['인증', 'IP54 방수방진'], ['소재', '알루미늄 합금']],
+        en: [['Weight', '3.8kg'], ['Max Assist', '30kg'], ['Rating', 'IP54'], ['Material', 'Aluminum Alloy']]
+      }
+    },
+    {
+      id: 'core',
+      img: 'prod_core.png',
+      title: { ko: 'RG Core (로봇 핵심 구동 모듈)', en: 'RG Core (Core Robotic Drive Module)' },
+      desc: {
+        ko: '고정밀 감속기와 고출력 모터가 통합된 일체형 구동 모듈입니다. 로보틱스의 심장을 직접 개발하여 공급합니다.',
+        en: 'Integrated drive module with high-precision reducer and high-output motor. We develop and supply the heart of robotics.'
+      },
+      specs: {
+        ko: [['최대토크', '150Nm'], ['정밀도', '0.01도'], ['통신', 'EtherCAT'], ['전압', '48V DC']],
+        en: [['Max Torque', '150Nm'], ['Precision', '0.01 deg'], ['Comm.', 'EtherCAT'], ['Voltage', '48V DC']]
+      }
+    }
+  ];
+
   main.innerHTML = `
     <section class="container">
       <h1 class="section-title">${t.products}</h1>
@@ -959,45 +1001,82 @@ function renderProducts() {
       </p>
       
       <div class="news-grid">
-        <div class="news-card reveal">
-          <img src="prod_medical.png" class="news-image">
-          <div class="news-content">
-            <h3 class="news-title">${currentLang === 'ko' ? 'RG Medica (의료용 재활 로봇)' : 'RG Medica (Medical Rehab Robot)'}</h3>
-            <p style="color: var(--text-muted); margin-top: 10px;">
-              ${currentLang === 'ko'
-      ? '보행 재활이 필요한 환자를 위한 인공지능 기반 웨어러블 로봇입니다. 환자의 보행 패턴을 분석하여 최적의 보조력을 제공합니다.'
-      : 'AI-based wearable robot for patients in need of gait rehabilitation. Analyzes gait patterns to provide optimal assistance.'}
-            </p>
+        ${products.map(p => `
+          <div class="news-card reveal">
+            <img src="${p.img}" class="news-image" alt="${p.title[currentLang]}" loading="lazy">
+            <div class="news-content">
+              <h3 class="news-title">${p.title[currentLang]}</h3>
+              <p style="color: var(--text-muted); margin-top: 10px; margin-bottom: 20px;">${p.desc[currentLang]}</p>
+              <button class="btn btn-outline" style="width: 100%; border-color: var(--primary-color); color: var(--primary-color);" 
+                onclick="openProductModal('${p.id}')">${currentLang === 'ko' ? '제품 정보 보기' : 'View Details'}</button>
+            </div>
           </div>
-        </div>
-        
-        <div class="news-card reveal">
-          <img src="prod_industrial.png" class="news-image">
-          <div class="news-content">
-            <h3 class="news-title">${currentLang === 'ko' ? 'RG Industrial (산업용 근력 보조)' : 'RG Industrial (Industrial Power Assist)'}</h3>
-            <p style="color: var(--text-muted); margin-top: 10px;">
-              ${currentLang === 'ko'
-      ? '물류 및 제조 현장에서 작업자의 근력을 보조하여 부상을 방지하고 효율을 극대화합니다. 고강도 탄소 섬유 소재로 내구성이 뛰어납니다.'
-      : 'Assists workers in logistics and manufacturing to prevent injuries and maximize efficiency. High durability with carbon fiber.'}
-            </p>
-          </div>
-        </div>
-
-        <div class="news-card">
-          <img src="prod_core.png" class="news-image">
-          <div class="news-content">
-            <h3 class="news-title">${currentLang === 'ko' ? 'RG Core (로봇 핵심 구동 모듈)' : 'RG Core (Core Robotic Drive Module)'}</h3>
-            <p style="color: var(--text-muted); margin-top: 10px;">
-              ${currentLang === 'ko'
-      ? '고정밀 감속기와 고출력 모터가 통합된 일체형 구동 모듈입니다. 로보틱스의 심장을 직접 개발하여 공급합니다.'
-      : 'Integrated drive module with high-precision reducer and high-output motor. We develop and supply the heart of robotics.'}
-            </p>
-          </div>
-        </div>
+        `).join('')}
       </div>
     </section>
   `;
+
+  // Global access for click handlers
+  window.currentProducts = products;
 }
+
+window.openProductModal = (id) => {
+  const p = window.currentProducts.find(item => item.id === id);
+  if (!p) return;
+
+  const modal = document.getElementById('product-modal');
+  const content = document.getElementById('product-modal-content');
+  const t = translations[currentLang];
+
+  content.innerHTML = `
+    <div class="detail-grid">
+      <img src="${p.img}" class="product-detail-img" alt="${p.title[currentLang]}">
+      <div>
+        <h2 style="font-size: 2rem; margin-bottom: 15px;">${p.title[currentLang]}</h2>
+        <p style="color: var(--text-muted); font-size: 1.1rem; line-height: 1.8; margin-bottom: 30px;">${p.desc[currentLang]}</p>
+        
+        <h4 style="margin-bottom: 15px; border-bottom: 2px solid var(--primary-color); display: inline-block;">Specifications</h4>
+        <table class="spec-table">
+          ${p.specs[currentLang].map(s => `
+            <tr>
+              <td class="spec-label">${s[0]}</td>
+              <td>${s[1]}</td>
+            </tr>
+          `).join('')}
+        </table>
+        
+        <div style="margin-top: 40px; display: flex; gap: 10px;">
+          <button class="btn btn-primary" onclick="openContactModal('${p.title[currentLang]} 문의')">${currentLang === 'ko' ? '구매 문의' : 'Purchase Inquiry'}</button>
+          <button class="btn btn-outline" onclick="closeModal('product-modal')">${currentLang === 'ko' ? '닫기' : 'Close'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+};
+
+window.openContactModal = (title = '') => {
+  const modal = document.getElementById('contact-modal');
+  const titleEl = document.getElementById('contact-modal-title');
+  if (title) titleEl.textContent = title;
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeModal = (id) => {
+  document.getElementById(id).classList.add('hidden');
+  document.body.style.overflow = '';
+};
+
+// Auto-bind close buttons and overlay clicks
+document.addEventListener('mousedown', (e) => {
+  if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('modal-close')) {
+    const activeModal = e.target.closest('.modal');
+    if (activeModal) closeModal(activeModal.id);
+  }
+});
 
 function renderSupport(sub) {
   const main = document.querySelector('main');
@@ -1179,109 +1258,142 @@ function renderCareers() {
 }
 
 /* Chatbot Logic */
+/* Chatbot Logic Enhanced */
 document.addEventListener('DOMContentLoaded', () => {
-  const chatToggle = document.getElementById('chatbot-toggle');
-  const chatClose = document.getElementById('chat-close');
-  const chatWindow = document.getElementById('chat-window');
-  const chatInput = document.getElementById('chat-input');
-  const chatSend = document.getElementById('chat-send');
-  const chatMessages = document.getElementById('chat-messages');
+    const chatToggle = document.getElementById('chatbot-toggle');
+    const chatClose = document.getElementById('chat-close');
+    const chatWindow = document.getElementById('chat-window');
+    const chatInput = document.getElementById('chat-input');
+    const chatSend = document.getElementById('chat-send');
+    const chatMessages = document.getElementById('chat-messages');
+    const quickBtnArea = document.getElementById('chat-quick-btns');
 
-  if (chatToggle && chatWindow) {
-    chatToggle.addEventListener('click', () => {
-      chatWindow.classList.toggle('hidden');
-      if (!chatWindow.classList.contains('hidden')) {
-        chatInput.focus();
-      }
-    });
+    const quickActions = [
+        { ko: '🚀 제품 소개', en: '🚀 Products', key: 'product' },
+        { ko: '📍 위치 안내', en: '📍 Location', key: 'location' },
+        { ko: '🛠 A/S 문의', en: '🛠 Service', key: 'service' },
+        { ko: '📞 직접 문의', en: '📞 Contact', key: 'contact' }
+    ];
 
-    chatClose.addEventListener('click', () => {
-      chatWindow.classList.add('hidden');
-    });
+    function renderQuickButtons() {
+        if (!quickBtnArea) return;
+        quickBtnArea.innerHTML = quickActions.map(action => `
+            <button class="quick-btn" onclick="window.handleQuickChat('${action.key}', '${action[currentLang]}')">${action[currentLang]}</button>
+        `).join('');
+    }
 
-    const sendMessage = () => {
-      const text = chatInput.value.trim();
-      if (!text) return;
-
-      addMessage(text, 'user');
-      chatInput.value = '';
-
-      // Keyword based response logic
-      setTimeout(() => {
-        const response = getBotResponse(text);
-        addMessage(response, 'bot');
-      }, 600);
+    window.handleQuickChat = (key, label) => {
+        addMessage(label, 'user');
+        showTyping(() => {
+            const response = getBotResponse(key);
+            addMessage(response, 'bot');
+        });
     };
 
-    chatSend.addEventListener('click', sendMessage);
-    chatInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') sendMessage();
-    });
-  }
+    if (chatToggle && chatWindow) {
+        chatToggle.addEventListener('click', () => {
+            chatWindow.classList.toggle('hidden');
+            if (!chatWindow.classList.contains('hidden')) {
+                renderQuickButtons();
+                chatInput.focus();
+            }
+        });
 
-  function addMessage(text, sender) {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `message ${sender}`;
-    msgDiv.textContent = text;
-    chatMessages.appendChild(msgDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
+        chatClose.addEventListener('click', () => {
+            chatWindow.classList.add('hidden');
+        });
 
-  function getBotResponse(input) {
-    const text = input.toLowerCase();
+        const sendMessage = () => {
+            const text = chatInput.value.trim();
+            if (!text) return;
 
-    // Greeting
-    if (text.includes('안녕') || text.includes('반가워') || text.includes('hello') || text.includes('hi')) {
-      return currentLang === 'ko'
-        ? '안녕하세요! RG ROBOTICS AI 비서입니다. 무엇을 도와드릴까요?'
-        : 'Hello! I am the RG ROBOTICS AI assistant. How can I help you?';
+            addMessage(text, 'user');
+            chatInput.value = '';
+
+            showTyping(() => {
+                const response = getBotResponse(text);
+                addMessage(response, 'bot');
+            });
+        };
+
+        if (chatSend) {
+          chatSend.addEventListener('click', sendMessage);
+        }
+        if (chatInput) {
+          chatInput.addEventListener('keypress', (e) => {
+              if (e.key === 'Enter') sendMessage();
+          });
+        }
     }
 
-    // Products
-    if (text.includes('제품') || text.includes('로봇') || text.includes('웨어러블') || text.includes('product') || text.includes('robot')) {
-      return currentLang === 'ko'
-        ? 'RG ROBOTICS는 Medica(의료), Industrial(산업), Core(구동모듈) 라인업을 보유하고 있습니다. 자세한 내용은 "제품" 메뉴를 확인해 보세요.'
-        : 'RG ROBOTICS offers Medica (Medical), Industrial (Power Assist), and Core (Drive Module) lineups. Please check the "Products" menu for details.';
+    function showTyping(callback) {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message bot typing';
+        typingDiv.innerHTML = '<span></span><span></span><span></span>';
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        setTimeout(() => {
+            typingDiv.remove();
+            callback();
+        }, 1000);
     }
 
-    // Price / Purchase
-    if (text.includes('가격') || text.includes('구매') || text.includes('얼마') || text.includes('price') || text.includes('buy') || text.includes('purchase')) {
-      return currentLang === 'ko'
-        ? '제품별 가격 및 구매 방법은 고객님의 용도에 따라 다를 수 있습니다. 정확한 견적은 "문의하기"를 통해 남겨주시면 상담원이 연락드리겠습니다.'
-        : 'Pricing and purchasing methods vary by product and use case. Please leave an inquiry through "Contact Us" for a formal quote.';
+    function addMessage(text, sender) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${sender} reveal`;
+        msgDiv.textContent = text;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        setTimeout(() => msgDiv.classList.add('active'), 50);
     }
 
-    // Location
-    if (text.includes('위치') || text.includes('주소') || text.includes('어디') || text.includes('location') || text.includes('address') || text.includes('where')) {
-      return currentLang === 'ko'
-        ? '본사는 서울특별시 구로구 경인로 445에 위치하고 있습니다. 방문 시 미리 예약 부탁드립니다.'
-        : 'Our headquarters is located at 445 Gyeongin-ro, Guro-gu, Seoul. Please make an appointment before visiting.';
+    function getBotResponse(input) {
+        const text = input.toLowerCase();
+
+        if (text.includes('product') || text.includes('제품')) {
+            return currentLang === 'ko'
+                ? '의료용(Medica), 산업용(Industrial), 그리고 핵심 구동 모듈(Core)이 준비되어 있습니다. 궁금한 제품 이름을 말씀해 주세요.'
+                : 'We have Medica (Medical), Industrial, and Core modules. Which one would you like to know more about?';
+        }
+        if (text.includes('location') || text.includes('위치')) {
+            return currentLang === 'ko'
+                ? '서울 구로구 경인로 445에 위치하고 있습니다. 오시는 길은 홈페이지 하단에서도 확인 가능합니다.'
+                : 'Located at 445 Gyeongin-ro, Guro-gu, Seoul. Check the footer for details.';
+        }
+        if (text.includes('service') || text.includes('as')) {
+            return currentLang === 'ko'
+                ? '제품 수리는 고객지원 메뉴의 서비스 센터를 통해 접수 가능합니다. 010-1234-5678로 전화 주셔도 됩니다.'
+                : 'Repairs can be requested via the Service Center in the Support menu, or call +82 10-1234-5678.';
+        }
+        if (text.includes('contact') || text.includes('문의')) {
+            setTimeout(() => window.openContactModal('AI Assistant 연계 문의'), 1500);
+            return currentLang === 'ko'
+                ? '상세 문의를 위해 문의 양식을 열어드렸습니다. 내용을 작성해 주시면 담당자가 연락드리겠습니다.'
+                : 'I opened the inquiry form for you. Our staff will contact you shortly.';
+        }
+
+        if (text.includes('안녕') || text.includes('hi') || text.includes('hello')) {
+            return currentLang === 'ko' ? '반갑습니다! 무엇을 도와드릴까요?' : 'Welcome! How can I help you?';
+        }
+
+        return currentLang === 'ko'
+            ? '죄송합니다. 더 정확한 안내를 위해 "제품", "위치", "A/S", "문의" 등의 단어를 입력해 주세요.'
+            : 'Sorry, I couldn\'t understand. Try "product", "location", "service", or "contact".';
     }
 
-    // Contact / Support
-    if (text.includes('연락') || text.includes('문의') || text.includes('전화') || text.includes('번호') || text.includes('contact') || text.includes('call') || text.includes('support')) {
-      return currentLang === 'ko'
-        ? '대표번호: 010-1234-5678, 이메일: support@rg-robotics.com 입니다. 고객센터 운영 시간은 평일 09:00~18:00입니다.'
-        : 'Phone: +82 10-1234-5678, Email: support@rg-robotics.com. Business hours are weekdays 09:00~18:00 (KST).';
+    // Contact Form Handler
+    const contactForm = document.getElementById('contact-form');
+    if (contactForm) {
+        contactForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('contact-name').value;
+            alert(currentLang === 'ko' 
+                ? `${name}님, 문의가 성공적으로 접수되었습니다. 곧 이메일로 답변 드리겠습니다.` 
+                : `${name}, your inquiry has been received. We will respond via email shortly.`);
+            closeModal('contact-modal');
+            contactForm.reset();
+        });
     }
-
-    // Career
-    if (text.includes('채용') || text.includes('입사') || text.includes('취업') || text.includes('career') || text.includes('job') || text.includes('hiring')) {
-      return currentLang === 'ko'
-        ? 'RG ROBOTICS와 함께 세상을 바꿀 인재를 찾고 있습니다! 채용 공고는 "Company > Careers" 메뉴를 참조해 주세요.'
-        : 'We are looking for talents to change the world! Please check the "Company > Careers" menu for open positions.';
-    }
-
-    // AS / Service
-    if (text.includes('as') || text.includes('수리') || text.includes('고장') || text.includes('repair') || text.includes('broken') || text.includes('service')) {
-      return currentLang === 'ko'
-        ? '제품 수리 및 AS 문의는 시리얼 번호와 함께 고객센터로 연락해 주세요. 전국 5개 거점 센터에서 신속히 도와드립니다.'
-        : 'For repairs and A/S, please contact our service center with your serial number. We have 5 regional centers to assist you.';
-    }
-
-    // Default
-    return currentLang === 'ko'
-      ? '죄송합니다. 해당 키워드는 아직 학습 중입니다. "제품", "가격", "위치", "문의" 등의 키워드를 입력해 보세요.'
-      : 'Sorry, I am still learning that keyword. Please try searching for "Product", "Price", "Location", or "Contact".';
-  }
 });
