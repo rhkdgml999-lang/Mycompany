@@ -319,7 +319,7 @@ function renderHome() {
         <p>${t.heroDesc}</p>
         <div class="hero-btns">
           <a href="#products" class="btn btn-primary">${t.viewProducts}</a>
-          <a href="#news" class="btn btn-outline" style="margin-left: 15px; color: white; border-color: rgba(255,255,255,0.3);">${t.latestNews}</a>
+          <a href="#company" class="btn btn-outline" style="margin-left: 15px; color: white; border-color: rgba(255,255,255,0.3);">${t.company}</a>
         </div>
       </div>
     </section>
