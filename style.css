@@ -497,7 +497,7 @@ h1, h2, h3, h4 {
     width: 300px;
     max-width: 85%;
     height: 100vh;
-    background: #fff;
+    background: var(--bg-color);
     z-index: 1000;
     box-shadow: -10px 0 30px rgba(0,0,0,0.1);
     transition: var(--transition);
@@ -532,7 +532,7 @@ h1, h2, h3, h4 {
     gap: 20px;
     margin-top: 40px;
     padding-top: 30px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--border-color);
   }
 
   #main-nav .header-actions .btn {
