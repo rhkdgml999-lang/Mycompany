@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rg-robotics-v2';
+const CACHE_NAME = 'rg-robotics-v2.2';
 const urlsToCache = [
   './',
   './index.html',
